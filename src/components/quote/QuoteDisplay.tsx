@@ -50,18 +50,17 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
         </Alert>
 
         {/* What's Not Included - More prominent */}
-        <Alert className="border-amber-400 bg-amber-50 ring-2 ring-amber-200">
-          <AlertTriangle className="w-5 h-5 text-amber-600" />
+        <Alert className="border-red-400 bg-red-50 ring-2 ring-red-200">
+          <AlertTriangle className="w-5 h-5 text-red-600" />
           <AlertDescription>
-            <div className="font-bold mb-2 text-amber-800 text-base">⚠️ Slutbeläggning - väljs vid hembesök:</div>
-            <ul className="text-sm space-y-1 text-amber-700 font-medium">
+            <div className="font-bold mb-2 text-red-800 text-base">❌ Ingår inte i priset:</div>
+            <ul className="text-sm space-y-1 text-red-700 font-medium">
               <li>• Betongplattor och marksten</li>
-              <li>• Kostka brukowa (små- och storgatsten)</li>
+              <li>• Små- och storgatsten</li>
               <li>• Granithällar och skifferplattor</li>
-              <li>• Pris beror på typ, färg och tillverkare</li>
             </ul>
-            <p className="text-xs text-amber-600 mt-2 font-medium bg-amber-100 p-2 rounded">
-              💡 Vi hjälper dig välja rätt material under vårt kostnadsfria hembesök
+            <p className="text-xs text-red-600 mt-2 font-medium bg-red-100 p-2 rounded">
+              💡 Dessa material väljs och prissätts vid vårt kostnadsfria hembesök. Pris beror på typ, färg och tillverkare.
             </p>
           </AlertDescription>
         </Alert>
