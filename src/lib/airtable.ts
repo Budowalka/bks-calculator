@@ -130,6 +130,22 @@ export async function createEstimate(
 /**
  * Create estimate items in Airtable
  */
+/**
+ * Map internal category names to Airtable Arbetsmoment options
+ */
+function mapCategoryToArbetsmoment(category: string): string {
+  const categoryMap: Record<string, string> = {
+    'Maskinflytt': '10 - Maskinflytt och etablering',
+    'Schakt': '20 - Schakt',
+    'Underarbete': '30 - Underarbete',
+    'Stenläggning': '50 - Stenläggning',
+    'Fogning': '70 - Fogning',
+    'Bortforsling': '99 - Bortforsling av byggavfall och städning'
+  };
+  
+  return categoryMap[category] || category;
+}
+
 export async function createEstimateItems(
   estimateId: string,
   quote: Quote,
@@ -149,7 +165,7 @@ export async function createEstimateItems(
           'Quantity': item.quantity,
           'Unit Price': item.unit_price_sek,
           'Unit': item.unit,
-          'Arbetsmoment': item.category
+          'Arbetsmoment': mapCategoryToArbetsmoment(item.category)
         }
       };
     });
