@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { FormData, CustomerInfo, FormStep, QuoteResponse } from '@/lib/types';
 
 interface FormContextType {
@@ -46,6 +47,7 @@ interface FormProviderProps {
 }
 
 export function FormProvider({ children }: FormProviderProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<Partial<FormData>>({
     // Set some sensible defaults
     area: 50,
@@ -129,6 +131,10 @@ export function FormProvider({ children }: FormProviderProps) {
         setSubmissionSuccess(true);
         setQuoteData(result);
         console.log('Quote submitted successfully:', result);
+        
+        // Store quote data in localStorage and redirect to thank you page
+        localStorage.setItem('bks-quote-data', JSON.stringify(result));
+        router.push('/tack');
       } else {
         throw new Error(result.error || 'Ett fel uppstod när offerten skulle skapas');
       }

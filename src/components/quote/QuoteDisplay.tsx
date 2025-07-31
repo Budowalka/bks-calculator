@@ -41,12 +41,12 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
         <Alert>
           <Info className="w-4 h-4" />
           <AlertDescription>
-            <div className="font-medium mb-2">Vad som ingår i offerten:</div>
+            <div className="font-medium mb-2">Vad som ingår i priset:</div>
             <ul className="text-sm space-y-1">
-              <li>• Material enligt specifikation</li>
-              <li>• Arbetskostnader</li>
-              <li>• Maskinflytt och etablering</li>
-              <li>• Schakt och förarbeten</li>
+              <li>• Alla förberedande material (makadam, stenflis, geotextil)</li>
+              <li>• Schakt och jordarbeten</li>
+              <li>• Asfalt (om vald som slutbeläggning)</li>
+              <li>• Alla arbeten och maskintransport</li>
               <li>• Bortforsling av byggavfall</li>
             </ul>
           </AlertDescription>
@@ -56,14 +56,16 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
         <Alert variant="secondary">
           <AlertTriangle className="w-4 h-4" />
           <AlertDescription>
-            <div className="font-medium mb-2">Kräver bedömning vid hembesök:</div>
+            <div className="font-medium mb-2">Slutbeläggning - väljs vid hembesök:</div>
             <ul className="text-sm space-y-1">
-              <li>• Tillgänglighet för maskiner</li>
-              <li>• Markförhållanden</li>
-              <li>• Eventuella hinder</li>
-              <li>• Exakta mått och mängder</li>
-              <li>• Dagvattenhantering</li>
+              <li>• Betongplattor och marksten</li>
+              <li>• Kostka brukowa (små- och storgatsten)</li>
+              <li>• Granithällar och skifferplattor</li>
+              <li>• Pris beror på typ, färg och tillverkare</li>
             </ul>
+            <p className="text-xs text-muted-foreground mt-2">
+              Vi hjälper dig välja rätt material under vårt kostnadsfria hembesök
+            </p>
           </AlertDescription>
         </Alert>
       </div>

@@ -6,7 +6,6 @@ import { FormWrapper } from '../form-wrapper';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { QuoteDisplay } from '@/components/quote/QuoteDisplay';
 import { FormData } from '@/lib/types';
 
 export function ContactInfoStep() {
@@ -17,8 +16,7 @@ export function ContactInfoStep() {
     submitForm,
     isSubmitting,
     submissionError,
-    submissionSuccess,
-    quoteData
+    submissionSuccess
   } = useFormContext();
 
   const [localData, setLocalData] = useState({
@@ -151,12 +149,17 @@ export function ContactInfoStep() {
           </Alert>
         )}
 
-        {/* Quote Display - Show after successful submission */}
-        {submissionSuccess && quoteData && (
-          <QuoteDisplay quoteData={quoteData} />
+        {/* Success Message - Show after successful submission */}
+        {submissionSuccess && (
+          <Alert className="border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">
+              <div className="font-medium mb-1">Tack för din förfrågan!</div>
+              <p className="text-sm">Du omdirigeras nu till din offert...</p>
+            </AlertDescription>
+          </Alert>
         )}
 
-        {/* Privacy Info - Always show */}
+        {/* Privacy Info - Show only if not submitted */}
         {!submissionSuccess && (
           <>
             <Alert className="border-green-200 bg-green-50">

@@ -149,7 +149,7 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor', 
             'Bortforsling',
-            Math.round(formData.area * 0.4 * 0.1), // 400mm depth * 10% waste factor
+            Math.max(1, Math.round(formData.area * 0.4 * 0.1)), // 400mm depth * 10% waste factor, minimum 1
             'm³'
           );
 
@@ -170,7 +170,7 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor',
             'Bortforsling', 
-            Math.round(formData.area * 0.2 * 0.1), // 200mm depth * 10% waste factor
+            Math.max(1, Math.round(formData.area * 0.2 * 0.1)), // 200mm depth * 10% waste factor, minimum 1
             'm³'
           );
 
@@ -313,21 +313,32 @@ export class BKSCalculator {
       quantity,
       unit: component.Unit || unit,
       unit_price_sek: unitPrice,
-      total_sek: total
+      total_sek: total,
+      labor_max: component.labor_max
     };
   }
 
   /**
-   * Calculate estimated work days
+   * Calculate estimated work days using labor_max from pricing components
    */
   private calculateWorkDays(items: QuoteItem[]): number {
-    // Basic estimation: 1 day per 50m² of work, minimum 1 day, maximum 10 days
-    const totalArea = items
-      .filter(item => item.unit === 'm²')
-      .reduce((sum, item) => sum + item.quantity, 0);
+    // Sum labor_max × quantity for all items that have labor_max
+    const totalLaborDays = items
+      .filter(item => item.labor_max && item.labor_max > 0)
+      .reduce((sum, item) => sum + (item.labor_max! * item.quantity), 0);
     
-    const estimatedDays = Math.ceil(totalArea / 50);
-    return Math.max(1, Math.min(10, estimatedDays));
+    // If no labor_max data available, fall back to area-based estimation
+    if (totalLaborDays === 0) {
+      const totalArea = items
+        .filter(item => item.unit === 'm²')
+        .reduce((sum, item) => sum + item.quantity, 0);
+      
+      const estimatedDays = Math.ceil(totalArea / 50);
+      return Math.max(1, Math.min(10, estimatedDays));
+    }
+    
+    // Return calculated labor days, minimum 1 day, maximum 10 days
+    return Math.max(1, Math.min(10, Math.ceil(totalLaborDays)));
   }
 
   /**

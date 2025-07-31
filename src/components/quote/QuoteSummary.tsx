@@ -59,10 +59,6 @@ export function QuoteSummary({ quote }: QuoteSummaryProps) {
           </div>
         </div>
 
-        {/* Quote ID */}
-        <div className="text-xs text-muted-foreground pt-2 border-t">
-          Offert-ID: {quote.quote_id}
-        </div>
       </CardContent>
     </Card>
   );

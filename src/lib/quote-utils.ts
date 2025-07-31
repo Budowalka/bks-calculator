@@ -78,14 +78,17 @@ export function formatQuantityWithUnit(quantity: number, unit: string): string {
 
 // Calculate estimated work timeline description
 export function getWorkTimelineDescription(estimatedDays: number): string {
-  if (estimatedDays <= 1) {
+  // Handle decimal days by rounding to nearest whole number for display
+  const roundedDays = Math.round(estimatedDays);
+  
+  if (roundedDays <= 1) {
     return '1 dag';
-  } else if (estimatedDays <= 3) {
-    return `${estimatedDays} dagar`;
-  } else if (estimatedDays <= 5) {
-    return `${estimatedDays} dagar (1 vecka)`;
+  } else if (roundedDays <= 3) {
+    return `${roundedDays} dagar`;
+  } else if (roundedDays <= 5) {
+    return `${roundedDays} dagar (1 vecka)`;
   } else {
-    const weeks = Math.ceil(estimatedDays / 5);
-    return `${estimatedDays} dagar (${weeks} ${weeks === 1 ? 'vecka' : 'veckor'})`;
+    const weeks = Math.ceil(roundedDays / 5);
+    return `${roundedDays} dagar (${weeks} ${weeks === 1 ? 'vecka' : 'veckor'})`;
   }
 }

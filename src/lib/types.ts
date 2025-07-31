@@ -49,6 +49,7 @@ export interface QuoteItem {
   unit: string;
   unit_price_sek: number;
   total_sek: number;
+  labor_max?: number;
   description?: string;
 }
 
