@@ -91,7 +91,7 @@ export async function createLead(
       'kantsten_need': formData.kantsten_need,
       'kantsten-langd': formData.kantsten_langd || null,
       'materialval-kantsten': formData.materialval_kantsten || null,
-      'plats-maskin': formData.plats_maskin || null,
+      'maskin-plats': formData.plats_maskin || null,
       'plats-kranbil': formData.plats_kranbil,
       'Lead Status': '10 - 🤖 Automatic Proposal',
       'Submission Date': new Date().toISOString()
