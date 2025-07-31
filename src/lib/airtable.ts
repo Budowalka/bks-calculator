@@ -145,15 +145,11 @@ export async function createEstimateItems(
       return {
         fields: {
           'Estimate': [estimateId],
-          'Item Description': item.name,
+          'Pricing Component': pricingComponent ? [pricingComponent.id] : [],
           'Quantity': item.quantity,
           'Unit Price': item.unit_price_sek,
           'Unit': item.unit,
-          'Line Total': item.total_sek,
-          'Arbetsmoment': item.category,
-          'Labor Rate': pricingComponent?.labor_rate || null,
-          'labor_max': pricingComponent?.labor_max || null,
-          'Pricing Component': pricingComponent ? [pricingComponent.id] : []
+          'Arbetsmoment': item.category
         }
       };
     });
