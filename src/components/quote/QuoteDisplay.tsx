@@ -14,7 +14,7 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
     return null;
   }
 
-  const { quote, disclaimer, next_steps } = quoteData;
+  const { quote, disclaimer } = quoteData;
 
   return (
     <div className="space-y-6">

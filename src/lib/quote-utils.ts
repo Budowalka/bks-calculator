@@ -26,7 +26,7 @@ export const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
 
 // Get category order index for sorting
 function getCategoryOrderIndex(category: string): number {
-  const index = CATEGORY_ORDER.indexOf(category as any);
+  const index = CATEGORY_ORDER.indexOf(category as typeof CATEGORY_ORDER[number]);
   return index === -1 ? 999 : index;
 }
 
