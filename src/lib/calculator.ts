@@ -149,8 +149,8 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor', 
             'Bortforsling',
-            Math.max(1, Math.round(formData.area * 0.4 * 0.1)), // 400mm depth * 10% waste factor, minimum 1
-            'm³'
+            Math.max(1, Math.round((formData.area * 0.4 * 0.1) / 8)), // 400mm depth * 10% waste factor, divided by 8m³ container, minimum 1 container
+            'st'
           );
 
           [excavation, baseLayer, compaction, wasteRemoval]
@@ -170,8 +170,8 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor',
             'Bortforsling', 
-            Math.max(1, Math.round(formData.area * 0.2 * 0.1)), // 200mm depth * 10% waste factor, minimum 1
-            'm³'
+            Math.max(1, Math.round((formData.area * 0.2 * 0.1) / 8)), // 200mm depth * 10% waste factor, divided by 8m³ container, minimum 1 container
+            'st'
           );
 
           [vegetation, baseLayer, compaction, wasteRemoval]
