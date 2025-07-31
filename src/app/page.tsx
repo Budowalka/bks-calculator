@@ -34,8 +34,8 @@ export default function Home() {
               />
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 mx-auto max-w-4xl">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 mx-auto max-w-4xl space-y-8">
+              <div className="text-center">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-4">
                   Räkna priset på din
                   <span className="block text-blue-600">stenläggning</span>
@@ -46,30 +46,32 @@ export default function Home() {
                   Helt kostnadsfritt och utan förpliktelser.
                 </p>
               </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button asChild size="lg" className="text-lg px-10 py-6 bg-blue-600 hover:bg-blue-700 shadow-lg">
-                <Link href="/kalkyl" className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5" />
-                  Starta kalkylatorn
-                </Link>
-              </Button>
-            </div>
+              <div className="text-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                  <Button asChild size="lg" className="text-lg px-10 py-6 bg-blue-600 hover:bg-blue-700 shadow-lg">
+                    <Link href="/kalkyl" className="flex items-center gap-2">
+                      <Calculator className="w-5 h-5" />
+                      Starta kalkylatorn
+                    </Link>
+                  </Button>
+                </div>
 
-            {/* Trust indicators */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span>Kostnadsfritt</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-600" />
-                <span>3 minuter</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span>Utan förpliktelser</span>
+                {/* Trust indicators */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span>Kostnadsfritt</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    <span>3 minuter</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span>Utan förpliktelser</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
