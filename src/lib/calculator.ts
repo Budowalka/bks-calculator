@@ -110,8 +110,8 @@ export class BKSCalculator {
     }
 
     const componentName = formData.materialval_kantsten === 'Betongkantsten' 
-      ? 'Kantstöd betong - mötstöd betong - rak sten'
-      : 'Kantstöd granit - mötstöd betong - rak sten';
+      ? 'Kantstöd betong - mõtstöd betong - rak sten'
+      : 'Kantstöd granit - mõtstöd betong - rak sten';
 
     const curbItem = this.createQuoteItem(
       componentName,
