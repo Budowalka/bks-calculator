@@ -279,8 +279,8 @@ export class BKSCalculator {
     const cleanup = this.createQuoteItem(
       'Städning och bortforsling av byggavfall',
       'Bortforsling',
-      formData.area,
-      'm²'
+      1,
+      'st'
     );
     if (cleanup) items.push(cleanup);
 
