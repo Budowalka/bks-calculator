@@ -143,16 +143,18 @@ export async function createEstimateItems(
       );
 
       return {
-        'Estimate': [estimateId],
-        'Item Description': item.name,
-        'Quantity': item.quantity,
-        'Unit Price': item.unit_price_sek,
-        'Unit': item.unit,
-        'Line Total': item.total_sek,
-        'Arbetsmoment': item.category,
-        'Labor Rate': pricingComponent?.labor_rate || null,
-        'labor_max': pricingComponent?.labor_max || null,
-        'Pricing Component': pricingComponent ? [pricingComponent.id] : []
+        fields: {
+          'Estimate': [estimateId],
+          'Item Description': item.name,
+          'Quantity': item.quantity,
+          'Unit Price': item.unit_price_sek,
+          'Unit': item.unit,
+          'Line Total': item.total_sek,
+          'Arbetsmoment': item.category,
+          'Labor Rate': pricingComponent?.labor_rate || null,
+          'labor_max': pricingComponent?.labor_max || null,
+          'Pricing Component': pricingComponent ? [pricingComponent.id] : []
+        }
       };
     });
 
