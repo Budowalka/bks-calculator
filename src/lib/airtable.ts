@@ -93,8 +93,7 @@ export async function createLead(
       'materialval-kantsten': formData.materialval_kantsten || null,
       'maskin-plats': formData.plats_maskin || null,
       'plats-kranbil': formData.plats_kranbil,
-      'Lead Status': '10 - 🤖 Automatic Proposal',
-      'Submission Date': new Date().toISOString()
+      'Lead Status': '10 - 🤖 Automatic Proposal'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
