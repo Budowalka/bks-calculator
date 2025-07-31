@@ -10,40 +10,40 @@ export function ConsultationCTA() {
   };
 
   return (
-    <Card className="border-green-200 bg-green-50">
+    <Card className="border-blue-200 bg-blue-50">
       <CardContent className="p-6 space-y-4">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h3 className="text-lg font-semibold text-green-800">
+          <h3 className="text-lg font-semibold text-blue-800">
             Nästa steg: Kostnadsfritt hembesök
           </h3>
-          <p className="text-sm text-green-700">
+          <p className="text-sm text-blue-700">
             Få en exakt offert baserad på noggrann mätning och bedömning av din fastighet
           </p>
         </div>
 
         {/* Benefits */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4">
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <MapPin className="w-4 h-4 text-green-600" />
+          <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
+            <MapPin className="w-4 h-4 text-blue-600" />
             <span>Hembesök</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <Calculator className="w-4 h-4 text-green-600" />
+          <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
+            <Calculator className="w-4 h-4 text-blue-600" />
             <span>Exakt mätning</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <CalendarCheck className="w-4 h-4 text-green-600" />
+          <div className="flex items-center justify-center gap-2 text-sm text-blue-700">
+            <CalendarCheck className="w-4 h-4 text-blue-600" />
             <span>Ingen kostnad</span>
           </div>
         </div>
 
         {/* CTA Button */}
-        <div className="text-center pt-2">
+        <div className="flex justify-center pt-2">
           <Button 
             onClick={handleBookConsultation}
             size="lg"
-            className="bg-green-600 hover:bg-green-700 text-white px-8"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base font-semibold"
           >
             <CalendarCheck className="w-5 h-5 mr-2" />
             Boka kostnadsfritt hembesök
@@ -52,7 +52,7 @@ export function ConsultationCTA() {
 
         {/* Additional Info */}
         <div className="text-center">
-          <p className="text-xs text-green-600">
+          <p className="text-xs text-blue-600">
             Vi kontaktar dig inom 24 timmar för att boka en tid som passar dig
           </p>
         </div>
