@@ -6,6 +6,7 @@ import { FormWrapper } from '../form-wrapper';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { QuoteDisplay } from '@/components/quote/QuoteDisplay';
 import { FormData } from '@/lib/types';
 
 export function ContactInfoStep() {
@@ -16,7 +17,8 @@ export function ContactInfoStep() {
     submitForm,
     isSubmitting,
     submissionError,
-    submissionSuccess
+    submissionSuccess,
+    quoteData
   } = useFormContext();
 
   const [localData, setLocalData] = useState({
@@ -149,40 +151,37 @@ export function ContactInfoStep() {
           </Alert>
         )}
 
-        {/* Success Display */}
-        {submissionSuccess && (
-          <Alert className="border-green-200 bg-green-50">
-            <AlertDescription>
-              <div className="font-medium mb-1 text-green-800">Tack för din förfrågan!</div>
-              <p className="text-sm text-green-700">
-                Din offert har skickats och du kommer att höra från oss inom 24 timmar. 
-                Kontrollera även din skräppost om du inte får något e-postmeddelande.
-              </p>
-            </AlertDescription>
-          </Alert>
+        {/* Quote Display - Show after successful submission */}
+        {submissionSuccess && quoteData && (
+          <QuoteDisplay quoteData={quoteData} />
         )}
 
-        <Alert className="border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">
-            <div className="font-medium mb-2">Vad händer nu?</div>
-            <ul className="text-sm space-y-1">
-              <li>• Du får en detaljerad offert via e-post inom 5 minuter</li>
-              <li>• Vi kontaktar dig inom 24 timmar för att boka hembesök</li>
-              <li>• Hembesöket är kostnadsfritt och utan förpliktelser</li>
-              <li>• Vid hembesöket får du en exakt offert baserad på noggrann mätning</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
+        {/* Privacy Info - Always show */}
+        {!submissionSuccess && (
+          <>
+            <Alert className="border-green-200 bg-green-50">
+              <AlertDescription className="text-green-800">
+                <div className="font-medium mb-2">Vad händer nu?</div>
+                <ul className="text-sm space-y-1">
+                  <li>• Du får en detaljerad offert via e-post inom 5 minuter</li>
+                  <li>• Vi kontaktar dig inom 24 timmar för att boka hembesök</li>
+                  <li>• Hembesöket är kostnadsfritt och utan förpliktelser</li>
+                  <li>• Vid hembesöket får du en exakt offert baserad på noggrann mätning</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
 
-        <Alert variant="secondary">
-          <AlertDescription>
-            <p className="font-medium mb-1">Integritetsskydd:</p>
-            <p className="text-sm">
-              Vi använder dina uppgifter endast för att ta fram din offert och kontakta dig. 
-              Vi delar aldrig dina uppgifter med tredje part. 
-            </p>
-          </AlertDescription>
-        </Alert>
+            <Alert variant="secondary">
+              <AlertDescription>
+                <p className="font-medium mb-1">Integritetsskydd:</p>
+                <p className="text-sm">
+                  Vi använder dina uppgifter endast för att ta fram din offert och kontakta dig. 
+                  Vi delar aldrig dina uppgifter med tredje part. 
+                </p>
+              </AlertDescription>
+            </Alert>
+          </>
+        )}
       </div>
     </FormWrapper>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { FormData, CustomerInfo, FormStep } from '@/lib/types';
+import { FormData, CustomerInfo, FormStep, QuoteResponse } from '@/lib/types';
 
 interface FormContextType {
   // Form data
@@ -36,6 +36,7 @@ interface FormContextType {
   isSubmitting: boolean;
   submissionError: string | null;
   submissionSuccess: boolean;
+  quoteData: QuoteResponse | null;
 }
 
 const FormContext = createContext<FormContextType | undefined>(undefined);
@@ -63,6 +64,7 @@ export function FormProvider({ children }: FormProviderProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
   
   const totalSteps = 9;
 
@@ -125,7 +127,7 @@ export function FormProvider({ children }: FormProviderProps) {
       
       if (result.success) {
         setSubmissionSuccess(true);
-        // Optionally redirect or show success message
+        setQuoteData(result);
         console.log('Quote submitted successfully:', result);
       } else {
         throw new Error(result.error || 'Ett fel uppstod när offerten skulle skapas');
@@ -157,7 +159,8 @@ export function FormProvider({ children }: FormProviderProps) {
     submitForm,
     isSubmitting,
     submissionError,
-    submissionSuccess
+    submissionSuccess,
+    quoteData
   };
 
   return (
