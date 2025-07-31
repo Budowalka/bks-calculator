@@ -35,15 +35,17 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
-                Räkna priset på din
-                <span className="block text-blue-600">stenläggning</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-                Få en professionell offert på bara <strong>3 minuter</strong>. 
-                <br className="hidden md:block" />
-                Helt kostnadsfritt och utan förpliktelser.
-              </p>
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 mx-auto max-w-4xl">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-4">
+                  Räkna priset på din
+                  <span className="block text-blue-600">stenläggning</span>
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
+                  Få en professionell offert på bara <strong>3 minuter</strong>. 
+                  <br className="hidden md:block" />
+                  Helt kostnadsfritt och utan förpliktelser.
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
