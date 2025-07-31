@@ -117,14 +117,7 @@ export async function createEstimate(
     const record = await base(TABLES.ESTIMATES).create({
       'Lead': [leadId],
       'Status': 'Automat',
-      'Estimate Title': `Automatoffert - ${formData.materialval} - ${formData.area}m²`,
-      'Notes': `Automatisk offert genererad från kalkylator`,
-      'Total Amount': quote.total_sek,
-      'Total Amount w VAT': quote.total_sek_with_vat,
-      'Moms': 25, // 25% VAT
-      'estimated_work_days': quote.estimated_days,
-      'Valid Until': quote.valid_until,
-      'estimate_nr': quote.quote_id
+      'Notes': `Automatisk offert genererad från kalkylator - ${formData.materialval} - ${formData.area}m²`
     });
 
     return record.id;
