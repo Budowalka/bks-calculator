@@ -117,19 +117,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('Starting Airtable upload...');
-    // Upload PDF to Airtable
-    try {
-      await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
-      console.log('PDF uploaded to Airtable successfully');
-    } catch (uploadError) {
-      console.error('Error uploading to Airtable:', uploadError);
-      // Continue anyway - we can still return the PDF even if upload fails
-      console.log('Continuing despite upload error...');
-    }
-
     console.log('Returning PDF response...');
-    // Return PDF as response (for testing)
+    // Return PDF as response (for testing only - no Airtable upload)
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {

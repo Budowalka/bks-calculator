@@ -15,13 +15,21 @@ export async function GET(
       );
     }
 
-    const pdfData = getPDF(filename);
+    // Try to get PDF with retry logic
+    let pdfData = getPDF(filename);
     
     if (!pdfData) {
-      return NextResponse.json(
-        { error: 'PDF not found or expired' },
-        { status: 404 }
-      );
+      // Wait a bit and try again (for race conditions)
+      await new Promise(resolve => setTimeout(resolve, 100));
+      pdfData = getPDF(filename);
+      
+      if (!pdfData) {
+        console.log(`PDF not found after retry: ${filename}`);
+        return NextResponse.json(
+          { error: 'PDF not found or expired' },
+          { status: 404 }
+        );
+      }
     }
 
     console.log(`Serving PDF: ${filename} (${pdfData.buffer.length} bytes)`);

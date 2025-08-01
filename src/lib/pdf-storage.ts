@@ -30,3 +30,10 @@ export function storePDF(filename: string, buffer: Buffer): void {
 export function getPDF(filename: string): { buffer: Buffer; timestamp: number } | undefined {
   return pdfStorage.get(filename);
 }
+
+export function cleanupOldPDF(filename: string): void {
+  if (pdfStorage.has(filename)) {
+    pdfStorage.delete(filename);
+    console.log(`Cleaned up old PDF: ${filename}`);
+  }
+}

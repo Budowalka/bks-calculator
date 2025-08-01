@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { storePDF } from '@/lib/pdf-storage';
+import { storePDF, cleanupOldPDF } from '@/lib/pdf-storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +12,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Clean up any existing PDF with the same filename
+    cleanupOldPDF(filename);
+    console.log(`Cleaned up old PDF if existed: ${filename}`);
 
     // Convert base64 back to buffer
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
