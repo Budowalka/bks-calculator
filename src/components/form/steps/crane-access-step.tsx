@@ -11,7 +11,8 @@ export function CraneAccessStep() {
   const { 
     formData, 
     updateFormData, 
-    markStepCompleted 
+    markStepCompleted,
+    nextStep
   } = useFormContext();
 
   const selectedAccess = formData.plats_kranbil;
@@ -19,6 +20,11 @@ export function CraneAccessStep() {
   const handleAccessSelect = (plats_kranbil: FormData['plats_kranbil']) => {
     updateFormData({ plats_kranbil });
     markStepCompleted(8);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
   return (
@@ -26,6 +32,7 @@ export function CraneAccessStep() {
       title="Plats för lastning och lossning"
       description="Finns det plats för kranbil framför fastigheten?"
       nextDisabled={!selectedAccess}
+      hideNavigation={true}
     >
       <div className="space-y-6">
         <div className="space-y-4">

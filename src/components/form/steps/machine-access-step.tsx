@@ -11,7 +11,8 @@ export function MachineAccessStep() {
   const { 
     formData, 
     updateFormData, 
-    markStepCompleted 
+    markStepCompleted,
+    nextStep
   } = useFormContext();
 
   const selectedAccess = formData.plats_maskin;
@@ -19,6 +20,11 @@ export function MachineAccessStep() {
   const handleAccessSelect = (plats_maskin: FormData['plats_maskin']) => {
     updateFormData({ plats_maskin });
     markStepCompleted(7);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
   return (
@@ -26,6 +32,7 @@ export function MachineAccessStep() {
       title="Tillgänglighet för maskiner"
       description="Vilken typ av maskin kan komma fram till arbetsområdet?"
       nextDisabled={!selectedAccess}
+      hideNavigation={true}
     >
       <div className="space-y-6">
         <div className="space-y-4">

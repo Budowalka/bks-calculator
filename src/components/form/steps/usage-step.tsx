@@ -10,7 +10,8 @@ export function UsageStep() {
   const { 
     formData, 
     updateFormData, 
-    markStepCompleted 
+    markStepCompleted,
+    nextStep
   } = useFormContext();
 
   const selectedUsage = formData.anvandning;
@@ -18,6 +19,11 @@ export function UsageStep() {
   const handleUsageSelect = (anvandning: FormData['anvandning']) => {
     updateFormData({ anvandning });
     markStepCompleted(4);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
   return (
@@ -25,6 +31,7 @@ export function UsageStep() {
       title="Vad är syftet med ytan som ska anläggas?"
       description="Välj användning för att beräkna rätt hållfasthet och specifikationer"
       nextDisabled={!selectedUsage}
+      hideNavigation={true}
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

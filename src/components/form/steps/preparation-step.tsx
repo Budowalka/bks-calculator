@@ -10,7 +10,8 @@ export function PreparationStep() {
   const { 
     formData, 
     updateFormData, 
-    markStepCompleted 
+    markStepCompleted,
+    nextStep
   } = useFormContext();
 
   const selectedPreparation = formData.forberedelse;
@@ -18,6 +19,11 @@ export function PreparationStep() {
   const handlePreparationSelect = (forberedelse: FormData['forberedelse']) => {
     updateFormData({ forberedelse });
     markStepCompleted(3);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
   return (
@@ -25,6 +31,7 @@ export function PreparationStep() {
       title="Hur ser området ut idag?"
       description="Berätta om områdets nuvarande skick så vi kan beräkna rätt förberedelsearbeten"
       nextDisabled={!selectedPreparation}
+      hideNavigation={true}
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4">

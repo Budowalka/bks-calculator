@@ -11,7 +11,8 @@ export function GroutingStep() {
   const { 
     formData, 
     updateFormData, 
-    markStepCompleted 
+    markStepCompleted,
+    nextStep
   } = useFormContext();
 
   const selectedGrouting = formData.fog;
@@ -19,6 +20,11 @@ export function GroutingStep() {
   const handleGroutingSelect = (fog: FormData['fog']) => {
     updateFormData({ fog });
     markStepCompleted(5);
+    
+    // Auto-advance after selection
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
   return (
@@ -26,6 +32,7 @@ export function GroutingStep() {
       title="Vilken typ av fogsand föredrar du?"
       description="Ditt val påverkar hållbarheten och underhållsbehovet av stenläggningen"
       nextDisabled={!selectedGrouting}
+      hideNavigation={true}
     >
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4">
