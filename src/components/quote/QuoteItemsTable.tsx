@@ -59,7 +59,7 @@ export function QuoteItemsTable({ items }: QuoteItemsTableProps) {
             {/* Category Subtotal */}
             <div className="flex justify-between items-center pt-2 border-t border-border/50">
               <span className="font-medium text-sm text-muted-foreground">
-                Subtotal {getCategoryDisplayName(category).toLowerCase()}:
+                Delsumma {getCategoryDisplayName(category).toLowerCase()}:
               </span>
               <span className="font-semibold text-sm">
                 {formatCurrency(
