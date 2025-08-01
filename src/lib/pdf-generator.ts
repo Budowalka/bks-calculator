@@ -409,8 +409,6 @@ function generateHTMLContent(estimate: EstimateData): string {
 
         <p>Vi värdesätter kommunikation och är alltid bara ett telefonsamtal bort om du har frågor eller funderingar. Med BKS AB kan du känna dig trygg genom hela resan från idé till färdig stenläggning. Transparens är en av hörnstenarna i vår verksamhet.</p>
 
-        <div class="page-break"></div>
-
         <h2>Övriga bestämmelser</h2>
 
         <h3>Förberedelse:</h3>
