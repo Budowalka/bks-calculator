@@ -223,6 +223,8 @@ export function getValidUntilDate(): string {
  */
 export async function getEstimateForPDF(estimateId: string) {
   try {
+    console.log('Fetching estimate for PDF:', estimateId);
+    
     // Get estimate record
     const estimateRecord = await base(TABLES.ESTIMATES).find(estimateId);
     
@@ -319,8 +321,16 @@ export async function uploadPDFToAirtableEstimate(
   filename: string
 ): Promise<void> {
   try {
+    console.log('Uploading PDF to Airtable:', { estimateId, filename, bufferSize: pdfBuffer.length });
+    
+    // Check if PDF is too large (Airtable has limits)
+    if (pdfBuffer.length > 20 * 1024 * 1024) { // 20MB limit
+      throw new Error(`PDF too large: ${pdfBuffer.length} bytes. Maximum is 20MB.`);
+    }
+    
     // Convert buffer to base64 (required by Airtable API)
     const base64Data = pdfBuffer.toString('base64');
+    console.log('Base64 conversion completed, length:', base64Data.length);
     
     // Create attachment object for Airtable - using partial type to avoid ID requirement
     const attachment: Partial<{
@@ -335,19 +345,25 @@ export async function uploadPDFToAirtableEstimate(
       size: pdfBuffer.length,
       url: `data:application/pdf;base64,${base64Data}`
     };
+    
+    console.log('Attachment object created');
 
     // First update with PDF created date
+    console.log('Updating pdf_created_date field...');
     await base(TABLES.ESTIMATES).update(estimateId, {
       'pdf_created_date': new Date().toISOString()
     });
+    console.log('PDF created date updated successfully');
 
     // Then update with attachment using a more permissive approach
     const updateFields: Record<string, unknown> = {
       'pdf_attachment': [attachment]
     };
     
+    console.log('Updating pdf_attachment field...');
     // @ts-expect-error - Bypassing TypeScript for Airtable attachment upload
     await base(TABLES.ESTIMATES).update(estimateId, updateFields);
+    console.log('PDF attachment updated successfully');
 
     console.log(`PDF successfully uploaded to estimate ${estimateId}`);
   } catch (error) {
