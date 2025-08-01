@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BKS Calculator - Räkna priset på stenläggning i Stockholm | Kostnadsfri offert",
+  title: "BKS Entreprenad - Räkna priset på stenläggning i Stockholm | Kostnadsfri offert",
   description: "Få en professionell offert för stenläggning på bara 3 minuter. Kostnadsfritt och utan förpliktelser. Betongplattor, marksten, asfalt - alla typer av stenläggning i Stockholm.",
   keywords: [
     "stenläggning Stockholm",
@@ -23,12 +23,12 @@ export const metadata: Metadata = {
     "marksten Stockholm",
     "asfalt pris",
     "stenläggning kalkylator",
-    "BKS",
+    "BKS Entreprenad",
     "stenläggning företag Stockholm"
   ],
-  authors: [{ name: "BKS Äkeri AB" }],
-  creator: "BKS Äkeri AB",
-  publisher: "BKS Äkeri AB",
+  authors: [{ name: "BKS Entreprenad" }],
+  creator: "BKS Entreprenad",
+  publisher: "BKS Entreprenad",
   formatDetection: {
     email: false,
     address: false,
@@ -39,16 +39,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "BKS Calculator - Räkna priset på stenläggning i Stockholm",
+    title: "BKS Entreprenad - Räkna priset på stenläggning i Stockholm",
     description: "Få en professionell offert för stenläggning på bara 3 minuter. Kostnadsfritt och utan förpliktelser.",
     url: 'https://bks-calculator.vercel.app',
-    siteName: 'BKS Calculator',
+    siteName: 'BKS Stenläggningskalkylator',
     images: [
       {
         url: '/images/Stenlägning-färdig-projekt.jpg',
         width: 1200,
         height: 630,
-        alt: 'Professionell stenläggning i Stockholm - BKS Äkeri AB',
+        alt: 'Professionell stenläggning i Stockholm - BKS Entreprenad',
       },
     ],
     locale: 'sv_SE',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "BKS Calculator - Räkna priset på stenläggning i Stockholm",
+    title: "BKS Entreprenad - Räkna priset på stenläggning i Stockholm",
     description: "Få en professionell offert för stenläggning på bara 3 minuter. Kostnadsfritt och utan förpliktelser.",
     images: ['/images/Stenlägning-färdig-projekt.jpg'],
   },
@@ -98,7 +98,7 @@ export default function RootLayout({
                 "addressLocality": "Stockholm",
                 "addressCountry": "SE"
               },
-              "telephone": "+46123456789",
+              "telephone": "+46735757897",
               "url": "https://bks-calculator.vercel.app",
               "priceRange": "$$",
               "serviceArea": {
