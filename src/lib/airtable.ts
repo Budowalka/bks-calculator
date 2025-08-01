@@ -226,25 +226,34 @@ export async function getEstimateForPDF(estimateId: string) {
     // Get estimate record
     const estimateRecord = await base(TABLES.ESTIMATES).find(estimateId);
     
+    if (!estimateRecord) {
+      throw new Error(`Estimate record not found: ${estimateId}`);
+    }
+    
     // Get linked lead data
-    const leadIds = estimateRecord.get('Lead') as string[];
+    const leadIds = estimateRecord.get('Lead') as string[] | undefined;
     let leadData = null;
-    if (leadIds && leadIds.length > 0) {
-      const leadRecord = await base(TABLES.LEAD_DATA).find(leadIds[0]);
-      leadData = {
-        first_name: leadRecord.get('Lead First Name') as string,
-        last_name: leadRecord.get('Lead Last Name') as string,
-        phone: leadRecord.get('Lead Phone Number') as string,
-        email: leadRecord.get('Lead Email') as string,
-        full_address: leadRecord.get('Full Address') as string,
-        street_address: leadRecord.get('Street Address') as string,
-        postal_code: leadRecord.get('Postal Code') as string,
-        city: leadRecord.get('City') as string
-      };
+    if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
+      try {
+        const leadRecord = await base(TABLES.LEAD_DATA).find(leadIds[0]);
+        leadData = {
+          first_name: (leadRecord.get('Lead First Name') as string) || '',
+          last_name: (leadRecord.get('Lead Last Name') as string) || '',
+          phone: (leadRecord.get('Lead Phone Number') as string) || '',
+          email: (leadRecord.get('Lead Email') as string) || '',
+          full_address: (leadRecord.get('Full Address') as string) || '',
+          street_address: (leadRecord.get('Street Address') as string) || '',
+          postal_code: (leadRecord.get('Postal Code') as string) || '',
+          city: (leadRecord.get('City') as string) || ''
+        };
+      } catch (leadError) {
+        console.warn('Error fetching lead data:', leadError);
+        // Continue without lead data
+      }
     }
 
     // Get estimate items
-    const estimateItemIds = estimateRecord.get('Estimate_Items') as string[];
+    const estimateItemIds = estimateRecord.get('Estimate_Items') as string[] | undefined;
     let estimateItems: Array<{
       id: string;
       description: string;
@@ -255,36 +264,41 @@ export async function getEstimateForPDF(estimateId: string) {
       arbetsmoment: string;
     }> = [];
     
-    if (estimateItemIds && estimateItemIds.length > 0) {
-      const itemRecords = await base(TABLES.ESTIMATE_ITEMS)
-        .select({
-          filterByFormula: `OR(${estimateItemIds.map(id => `RECORD_ID()='${id}'`).join(',')})`
-        })
-        .all();
+    if (estimateItemIds && Array.isArray(estimateItemIds) && estimateItemIds.length > 0) {
+      try {
+        const itemRecords = await base(TABLES.ESTIMATE_ITEMS)
+          .select({
+            filterByFormula: `OR(${estimateItemIds.map(id => `RECORD_ID()='${id}'`).join(',')})`
+          })
+          .all();
 
-      estimateItems = itemRecords.map(record => ({
-        id: record.id,
-        description: record.get('Item Description') as string,
-        quantity: record.get('Quantity') as number,
-        unit: record.get('Unit') as string,
-        unit_price: record.get('Unit Price') as number,
-        line_total: record.get('Line Total') as number,
-        arbetsmoment: record.get('Arbetsmoment') as string
-      }));
+        estimateItems = itemRecords.map(record => ({
+          id: record.id,
+          description: (record.get('Item Description') as string) || '',
+          quantity: (record.get('Quantity') as number) || 0,
+          unit: (record.get('Unit') as string) || '',
+          unit_price: (record.get('Unit Price') as number) || 0,
+          line_total: (record.get('Line Total') as number) || 0,
+          arbetsmoment: (record.get('Arbetsmoment') as string) || ''
+        }));
+      } catch (itemsError) {
+        console.warn('Error fetching estimate items:', itemsError);
+        // Continue with empty items array
+      }
     }
 
-    // Build estimate data
+    // Build estimate data with safe defaults
     const estimate = {
       id: estimateRecord.id,
-      estimate_nr: estimateRecord.get('estimate_nr') as number,
-      status: estimateRecord.get('Status') as string,
-      created: estimateRecord.get('Created') as string,
-      valid_until: estimateRecord.get('Valid Until') as string,
-      notes: estimateRecord.get('Notes') as string,
-      total_amount: estimateRecord.get('Total Amount') as number,
-      total_amount_vat: estimateRecord.get('Total Amount w VAT') as number,
-      vat_amount: estimateRecord.get('Moms') as number,
-      estimated_work_days: estimateRecord.get('estimated_work_days') as number,
+      estimate_nr: (estimateRecord.get('estimate_nr') as number) || 0,
+      status: (estimateRecord.get('Status') as string) || 'Draft',
+      created: (estimateRecord.get('Created') as string) || new Date().toISOString(),
+      valid_until: (estimateRecord.get('Valid Until') as string) || new Date().toISOString(),
+      notes: (estimateRecord.get('Notes') as string) || '',
+      total_amount: (estimateRecord.get('Total Amount') as number) || 0,
+      total_amount_vat: (estimateRecord.get('Total Amount w VAT') as number) || 0,
+      vat_amount: (estimateRecord.get('Moms') as number) || 0,
+      estimated_work_days: (estimateRecord.get('estimated_work_days') as number) || 1,
       items: estimateItems,
       lead: leadData
     };
