@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
 
 export interface EstimateItem {
   id: string;
@@ -326,19 +327,38 @@ export async function generateEstimatePDF(estimate: EstimateData): Promise<Buffe
   let browser;
   
   try {
-    // Launch Puppeteer browser
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
-    });
+    // Configure for Vercel serverless environment
+    const isProduction = process.env.NODE_ENV === 'production';
+    console.log('PDF Generation environment:', { isProduction, nodeEnv: process.env.NODE_ENV });
+    
+    if (isProduction) {
+      // Use @sparticuz/chromium for Vercel deployment
+      console.log('Using @sparticuz/chromium for production');
+      browser = await puppeteer.launch({
+        args: [
+          ...chromium.args,
+          '--hide-scrollbars',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+        ],
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+    } else {
+      // Local development
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
+      });
+    }
 
     const page = await browser.newPage();
 
