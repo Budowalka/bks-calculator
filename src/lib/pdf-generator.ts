@@ -70,12 +70,16 @@ function generateHTMLContent(estimate: EstimateData): string {
     return groups;
   }, {} as Record<string, EstimateItem[]>);
 
-  // Calculate totals by category
-  const categoryTotals = Object.entries(groupedItems).map(([category, items]) => ({
-    category,
-    total: items.reduce((sum, item) => sum + item.line_total, 0),
-    items
-  }));
+  // Calculate totals by category and sort by stage numbers
+  const categoryTotals = Object.entries(groupedItems)
+    .map(([category, items]) => ({
+      category,
+      total: items.reduce((sum, item) => sum + item.line_total, 0),
+      items,
+      // Extract stage number for sorting (e.g., "10 - Preparation" -> 10)
+      stageNumber: parseInt(category.match(/^(\d+)/)?.[1] || '999')
+    }))
+    .sort((a, b) => a.stageNumber - b.stageNumber);
 
   const clientName = estimate.lead 
     ? `${estimate.lead.first_name} ${estimate.lead.last_name}`
@@ -393,8 +397,6 @@ function generateHTMLContent(estimate: EstimateData): string {
         <p>All denna dokumentation arkiveras digitalt och är tillgänglig för dig som kund även efter avslutat projekt. Du ska känna dig trygg i att arbetet är utfört enligt konstens alla regler och att du har full insyn i processen.</p>
 
         <p>Vi värdesätter kommunikation och är alltid bara ett telefonsamtal bort om du har frågor eller funderingar. Med BKS AB kan du känna dig trygg genom hela resan från idé till färdig stenläggning. Transparens är en av hörnstenarna i vår verksamhet.</p>
-
-        <div class="page-break"></div>
 
         <h2>Övriga bestämmelser</h2>
 
