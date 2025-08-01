@@ -60,8 +60,23 @@ function generateHTMLContent(estimate: EstimateData): string {
     return category.replace(/^\d+\s*-\s*/, '');
   };
 
-  // Group items by arbetsmoment (work category)
-  const groupedItems = estimate.items.reduce((groups, item) => {
+  // First, sort items by their original arbetsmoment (stage numbers)
+  const sortedItems = [...estimate.items].sort((a, b) => {
+    const aOriginal = a.arbetsmoment || '999 - Övriga arbeten';
+    const bOriginal = b.arbetsmoment || '999 - Övriga arbeten';
+    
+    // Extract stage numbers for sorting
+    const aMatch = aOriginal.match(/^(\d+)/);
+    const bMatch = bOriginal.match(/^(\d+)/);
+    
+    const aStage = aMatch ? parseInt(aMatch[1]) : 999;
+    const bStage = bMatch ? parseInt(bMatch[1]) : 999;
+    
+    return aStage - bStage;
+  });
+
+  // Group items by arbetsmoment (work category) after sorting
+  const groupedItems = sortedItems.reduce((groups, item) => {
     const category = cleanCategoryName(item.arbetsmoment || 'Övriga arbeten');
     if (!groups[category]) {
       groups[category] = [];
@@ -70,16 +85,12 @@ function generateHTMLContent(estimate: EstimateData): string {
     return groups;
   }, {} as Record<string, EstimateItem[]>);
 
-  // Calculate totals by category and sort by stage numbers
-  const categoryTotals = Object.entries(groupedItems)
-    .map(([category, items]) => ({
-      category,
-      total: items.reduce((sum, item) => sum + item.line_total, 0),
-      items,
-      // Extract stage number for sorting (e.g., "10 - Preparation" -> 10)
-      stageNumber: parseInt(category.match(/^(\d+)/)?.[1] || '999')
-    }))
-    .sort((a, b) => a.stageNumber - b.stageNumber);
+  // Calculate totals by category
+  const categoryTotals = Object.entries(groupedItems).map(([category, items]) => ({
+    category,
+    total: items.reduce((sum, item) => sum + item.line_total, 0),
+    items
+  }));
 
   const clientName = estimate.lead 
     ? `${estimate.lead.first_name} ${estimate.lead.last_name}`
@@ -398,6 +409,8 @@ function generateHTMLContent(estimate: EstimateData): string {
 
         <p>Vi värdesätter kommunikation och är alltid bara ett telefonsamtal bort om du har frågor eller funderingar. Med BKS AB kan du känna dig trygg genom hela resan från idé till färdig stenläggning. Transparens är en av hörnstenarna i vår verksamhet.</p>
 
+        <div class="page-break"></div>
+
         <h2>Övriga bestämmelser</h2>
 
         <h3>Förberedelse:</h3>
@@ -639,6 +652,7 @@ export function generatePDFFilename(estimate: EstimateData): string {
     : 'kund';
   
   const date = new Date().toISOString().split('T')[0];
+  const timestamp = Date.now(); // Add timestamp to ensure fresh PDFs each time
   
-  return `BKS_Offert_${estimate.estimate_nr}_${clientName}_${date}.pdf`;
+  return `BKS_Offert_${estimate.estimate_nr}_${clientName}_${date}_${timestamp}.pdf`;
 }
