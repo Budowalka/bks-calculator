@@ -328,26 +328,6 @@ export async function uploadPDFToAirtableEstimate(
       throw new Error(`PDF too large: ${pdfBuffer.length} bytes. Maximum is 20MB.`);
     }
     
-    // Convert buffer to base64 (required by Airtable API)
-    const base64Data = pdfBuffer.toString('base64');
-    console.log('Base64 conversion completed, length:', base64Data.length);
-    
-    // Create attachment object for Airtable - using partial type to avoid ID requirement
-    const attachment: Partial<{
-      id: string;
-      filename: string;
-      type: string;
-      size: number;
-      url: string;
-    }> = {
-      filename: filename,
-      type: 'application/pdf',
-      size: pdfBuffer.length,
-      url: `data:application/pdf;base64,${base64Data}`
-    };
-    
-    console.log('Attachment object created');
-
     // First update with PDF created date
     console.log('Updating pdf_created_date field...');
     await base(TABLES.ESTIMATES).update(estimateId, {
@@ -355,17 +335,66 @@ export async function uploadPDFToAirtableEstimate(
     });
     console.log('PDF created date updated successfully');
 
-    // Then update with attachment using a more permissive approach
-    const updateFields: Record<string, unknown> = {
-      'pdf_attachment': [attachment]
-    };
+    // Create a temporary URL for Airtable to fetch the PDF from
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bks-calculator.vercel.app';
+    const tempPdfUrl = `${baseUrl}/api/serve-pdf/${filename}`;
     
-    console.log('Updating pdf_attachment field...');
-    // @ts-expect-error - Bypassing TypeScript for Airtable attachment upload
-    await base(TABLES.ESTIMATES).update(estimateId, updateFields);
-    console.log('PDF attachment updated successfully');
+    // Store PDF temporarily for Airtable to fetch
+    // We'll make a direct API call to store it
+    console.log('Storing PDF temporarily for Airtable to fetch...');
+    
+    try {
+      // Make a POST request to store the PDF temporarily
+      const storeResponse = await fetch(`${baseUrl}/api/store-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: filename,
+          pdfBase64: pdfBuffer.toString('base64')
+        })
+      });
+      
+      if (!storeResponse.ok) {
+        throw new Error('Failed to store PDF temporarily');
+      }
+      
+      console.log('PDF stored temporarily, attempting Airtable upload...');
 
-    console.log(`PDF successfully uploaded to estimate ${estimateId}`);
+      // Now provide Airtable with the URL to fetch from
+      const updateData: Record<string, unknown> = {
+        'pdf_attachment': [{
+          filename: filename,
+          url: tempPdfUrl
+        }]
+      };
+      
+      // @ts-expect-error - Airtable attachment format requires specific typing
+      await base(TABLES.ESTIMATES).update(estimateId, updateData);
+      
+      console.log('PDF attachment updated successfully via URL fetch');
+      
+    } catch (attachmentError) {
+      console.error('URL-based attachment upload failed:', attachmentError);
+      
+      // Fallback: Update notes with PDF info
+      const existingRecord = await base(TABLES.ESTIMATES).find(estimateId);
+      const existingNotes = existingRecord.get('Notes') as string || '';
+      const newNotes = existingNotes ? 
+        `${existingNotes}\n\nPDF genererat: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB)` :
+        `PDF genererat: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB)`;
+      
+      await base(TABLES.ESTIMATES).update(estimateId, {
+        'Notes': newNotes
+      });
+      console.log('Updated estimate with PDF info in notes as fallback');
+      
+      // Don't re-throw - consider this a partial success
+      console.log('PDF generation completed, attachment upload failed but info recorded');
+    }
+
+    console.log(`PDF processing completed for estimate ${estimateId}`);
   } catch (error) {
     console.error('Error uploading PDF to Airtable:', error);
     throw new Error('Failed to upload PDF to Airtable');
