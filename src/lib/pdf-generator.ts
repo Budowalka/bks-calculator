@@ -105,8 +105,9 @@ function generateHTMLContent(estimate: EstimateData): string {
     </tr>
   `).join('');
 
-  // BKS Logo as base64
-  const bksLogoBase64 = "data:image/png;base64,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";
+  // BKS Logo - use full URL for Puppeteer to load
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bks-calculator.vercel.app';
+  // const bksLogoUrl = "data:image/png;base64,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
 
   return `
     <!DOCTYPE html>
@@ -254,11 +255,7 @@ function generateHTMLContent(estimate: EstimateData): string {
           }
         </style>
       </head>
-      <body>
-        <div class="logo-container">
-          <img src="${bksLogoBase64}" alt="BKS AB Logo" class="logo" />
-        </div>
-        
+      <body>        
         <h1>Vackra och hållbara uteplatser</h1>
         
         <table class="header-table">
@@ -292,39 +289,6 @@ function generateHTMLContent(estimate: EstimateData): string {
         <p>I denna offert presenterar vi vårt sätt för att förverkliga din vision om en vacker och funktionell stenlagd uteplats. Baserat på vårt inledande samtal och platsbesök har vi skräddarsytt en lösning som möter dina specifika önskemål och behov.</p>
 
         <p>Här beskriver vi ingående vår arbetsprocess, från noggrann planering och materialval till grundarbete och hantverksmässig stenläggning. Du får också en detaljerad specifikation av valda produkter, en transparent prisbild samt information om garantier.</p>
-
-        <p>Vårt mål är att du ska känna dig trygg och välinformerad genom hela processen. Vi hoppas att denna offert ger dig en tydlig bild av hur vi på BKS AB kan hjälpa dig att skapa uteplatsen du drömmer om. Tveka inte att höra av dig med frågor!</p>
-
-        <p><strong>Låt oss tillsammans ta första steget mot förverkligandet av ditt stenprojekt!</strong></p>
-
-        <h2>Arbetsprocess - från idé till färdigt resultat</h2>
-
-        <h3>Detaljerad offert baserad på dina önskemål</h3>
-        <p>Baserat på den kostnadsfria konsultationen och platsbesöket, där vi lyssnade på dina tankar och önskemål samt inspekterade ytan, har våra experter tagit fram denna detaljerade offert. Här presenterar vi våra rekommendationer kring lämpliga material och designlösningar, skräddarsydda för ditt projekt. Offerten har ett fastpris, så du slipper överraskningar längre fram.</p>
-
-        <h3>Noggrann planering och materialval</h3>
-        <p>När du accepterat offerten går vi vidare med noggrann planering. Vi stämmer av dina val av plattor, färg och mönster och beställer hem högkvalitativt material från välrenommerade leverantörer. Allt för att förverkliga din vision.</p>
-
-        <h3>Grundarbete med fokus på hållbarhet</h3>
-        <p>På utsatt datum börjar vårt team arbetet. Beroende på ytans beskaffenhet och förutsättningar anpassar vi grundarbetet:</p>
-
-        <p><strong>Scenario 1: Ytan är förberedd för stenläggning</strong><br />
-        Om ytan redan är förberedd kontrollerar vi först att lutningen är korrekt för god vattenavrinning. Vid behov justerar vi fallet med hjälp av laser och vattenpass. Därefter lägger vi ut ett lager av stenflis eller stenmjöl som ytskikt, för optimal dränering och bärighet.</p>
-
-        <p><strong>Scenario 2: Ytan kräver fullständig preparation</strong><br />
-        Om ytan däremot inte är förberedd, börjar vi med att gräva ut till rätt djup. Detta görs för hand, med kranbil eller grävmaskin, beroende på ytans storlek och åtkomlighet. Vi lägger sedan en fiberduk som separerar underlaget och förhindrar ogräs. Ovanpå detta fyller vi på med bergkross i lämplig fraktion som bärlager. Varje lager packas noggrant med vibroplatta för att skapa en stabil grund. Slutligen adderar vi ett ytskikt av stenflis, och på så sätt förbereder vi för stenläggning.</p>
-
-        <p>Oavsett utgångsläge utför vi grundarbetet med omsorg och expertis. Vi använder alltid ändamålsenlig utrustning och beprövade metoder för att skapa bästa möjliga förutsättningar för din nya stenläggning. Detta grundarbete är avgörande för ett hållbart och långvarigt resultat.</p>
-
-        <h3>Stenläggning med känsla för detaljer</h3>
-        <p>Med en stabil grund på plats är det dags för våra hantverkare att lägga stenarna enligt det överenskomna mönstret. Detta görs med största precision och känsla för detaljer. Stenar tilldelas och ytterkanterna anpassas genom kapning för ett prydligt intryck. Plattorna sätts med distanser för jämna fogar som sedan fylls med specialanpassat fogmaterial. Vi använder moderna hjälpmedel men traditionell hantverksskicklighet är avgörande för ett gediget slutresultat.</p>
-
-        <h3>Avslutande finish och kvalitetskontroll</h3>
-        <p>I slutfasen finputsar vi ytan genom att sopa rent och tvätta bort eventuella fogrester. Vårt mål är att lämna över en fin stenläggning som överträffar dina förväntningar. Som ett sista steg gör vi en grundlig kvalitetsgenomgång tillsammans med dig som kund, för att säkerställa att allt är enligt önskemål.</p>
-
-        <p>Genom hela processen, från offertförfrågan till avslutad stenläggning, sätter vi dina önskemål i centrum. Med gedigen erfarenhet, kvalitetsmaterial och beprövade metoder ser vi till att leverera resultat som överträffar förväntningarna. Låt BKS AB förverkliga visionen om din nya uteplats!</p>
-
-        <div class="page-break"></div>
 
         <p>Vårt mål är att du ska känna dig trygg och välinformerad genom hela processen. Vi hoppas att denna offert ger dig en tydlig bild av hur vi på BKS AB kan hjälpa dig att skapa uteplatsen du drömmer om. Tveka inte att höra av dig med frågor!</p>
 
@@ -610,13 +574,23 @@ export async function generateEstimatePDF(estimate: EstimateData): Promise<Buffe
 
     const page = await browser.newPage();
 
+    // Set longer timeout for image loading
+    page.setDefaultTimeout(30000);
+    page.setDefaultNavigationTimeout(30000);
+
     // Generate HTML content
     const htmlContent = generateHTMLContent(estimate);
 
-    // Set page content
+    // Set page content and wait for all resources to load
     await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0'
+      waitUntil: 'networkidle0',
+      timeout: 30000
     });
+
+    // Wait a bit more for images to load
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    console.log('Page content set, generating PDF...');
 
     // Generate PDF with options
     const pdfBuffer = await page.pdf({
