@@ -217,3 +217,81 @@ export function getValidUntilDate(): string {
   date.setDate(date.getDate() + 30);
   return date.toISOString().split('T')[0]; // YYYY-MM-DD format
 }
+
+/**
+ * Get complete estimate data with items and lead info for PDF generation
+ */
+export async function getEstimateForPDF(estimateId: string) {
+  try {
+    // Get estimate record
+    const estimateRecord = await base(TABLES.ESTIMATES).find(estimateId);
+    
+    // Get linked lead data
+    const leadIds = estimateRecord.get('Lead') as string[];
+    let leadData = null;
+    if (leadIds && leadIds.length > 0) {
+      const leadRecord = await base(TABLES.LEAD_DATA).find(leadIds[0]);
+      leadData = {
+        first_name: leadRecord.get('Lead First Name') as string,
+        last_name: leadRecord.get('Lead Last Name') as string,
+        phone: leadRecord.get('Lead Phone Number') as string,
+        email: leadRecord.get('Lead Email') as string,
+        full_address: leadRecord.get('Full Address') as string,
+        street_address: leadRecord.get('Street Address') as string,
+        postal_code: leadRecord.get('Postal Code') as string,
+        city: leadRecord.get('City') as string
+      };
+    }
+
+    // Get estimate items
+    const estimateItemIds = estimateRecord.get('Estimate_Items') as string[];
+    let estimateItems: Array<{
+      id: string;
+      description: string;
+      quantity: number;
+      unit: string;
+      unit_price: number;
+      line_total: number;
+      arbetsmoment: string;
+    }> = [];
+    
+    if (estimateItemIds && estimateItemIds.length > 0) {
+      const itemRecords = await base(TABLES.ESTIMATE_ITEMS)
+        .select({
+          filterByFormula: `OR(${estimateItemIds.map(id => `RECORD_ID()='${id}'`).join(',')})`
+        })
+        .all();
+
+      estimateItems = itemRecords.map(record => ({
+        id: record.id,
+        description: record.get('Item Description') as string,
+        quantity: record.get('Quantity') as number,
+        unit: record.get('Unit') as string,
+        unit_price: record.get('Unit Price') as number,
+        line_total: record.get('Line Total') as number,
+        arbetsmoment: record.get('Arbetsmoment') as string
+      }));
+    }
+
+    // Build estimate data
+    const estimate = {
+      id: estimateRecord.id,
+      estimate_nr: estimateRecord.get('estimate_nr') as number,
+      status: estimateRecord.get('Status') as string,
+      created: estimateRecord.get('Created') as string,
+      valid_until: estimateRecord.get('Valid Until') as string,
+      notes: estimateRecord.get('Notes') as string,
+      total_amount: estimateRecord.get('Total Amount') as number,
+      total_amount_vat: estimateRecord.get('Total Amount w VAT') as number,
+      vat_amount: estimateRecord.get('Moms') as number,
+      estimated_work_days: estimateRecord.get('estimated_work_days') as number,
+      items: estimateItems,
+      lead: leadData
+    };
+
+    return estimate;
+  } catch (error) {
+    console.error('Error fetching estimate for PDF:', error);
+    throw new Error('Failed to fetch estimate data');
+  }
+}
