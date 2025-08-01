@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEstimateForPDF } from '@/lib/airtable';
+import { getEstimateForPDF, uploadPDFToAirtableEstimate } from '@/lib/airtable';
 import { generateEstimatePDF, generatePDFFilename } from '@/lib/pdf-generator';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { estimateId } = body;
+    const { estimateId, returnPdf = false } = body;
 
     if (!estimateId) {
       return NextResponse.json(
@@ -28,14 +28,27 @@ export async function POST(request: NextRequest) {
     const pdfBuffer = await generateEstimatePDF(estimate);
     const filename = generatePDFFilename(estimate);
 
-    // Return PDF as response
-    return new NextResponse(pdfBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': pdfBuffer.length.toString(),
-      },
+    // Upload PDF to Airtable
+    await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+
+    // If returnPdf is true, return the PDF (for testing)
+    if (returnPdf) {
+      return new NextResponse(pdfBuffer, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Content-Length': pdfBuffer.length.toString(),
+        },
+      });
+    }
+
+    // Default: return success status (for webhook usage)
+    return NextResponse.json({
+      success: true,
+      message: 'PDF generated and uploaded to Airtable successfully',
+      filename: filename,
+      estimateId: estimateId
     });
 
   } catch (error) {
@@ -50,7 +63,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Also support GET for testing with query params
+// GET endpoint for testing - always returns PDF directly
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -77,7 +90,10 @@ export async function GET(request: NextRequest) {
     const pdfBuffer = await generateEstimatePDF(estimate);
     const filename = generatePDFFilename(estimate);
 
-    // Return PDF as response
+    // Upload PDF to Airtable
+    await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+
+    // Return PDF as response (for testing)
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {

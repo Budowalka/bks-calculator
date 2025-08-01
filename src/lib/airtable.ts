@@ -295,3 +295,36 @@ export async function getEstimateForPDF(estimateId: string) {
     throw new Error('Failed to fetch estimate data');
   }
 }
+
+/**
+ * Upload PDF to Airtable as attachment and update estimate record
+ */
+export async function uploadPDFToAirtableEstimate(
+  estimateId: string,
+  pdfBuffer: Buffer,
+  filename: string
+): Promise<void> {
+  try {
+    // Convert buffer to base64 (required by Airtable API)
+    const base64Data = pdfBuffer.toString('base64');
+    
+    // Create attachment object for Airtable (without id as it will be generated)
+    const attachment = {
+      filename: filename,
+      type: 'application/pdf',
+      size: pdfBuffer.length,
+      url: `data:application/pdf;base64,${base64Data}`
+    };
+
+    // Update the estimate record with PDF attachment and created date
+    await base(TABLES.ESTIMATES).update(estimateId, {
+      'pdf_attachment': [attachment],
+      'pdf_created_date': new Date().toISOString()
+    });
+
+    console.log(`PDF successfully uploaded to estimate ${estimateId}`);
+  } catch (error) {
+    console.error('Error uploading PDF to Airtable:', error);
+    throw new Error('Failed to upload PDF to Airtable');
+  }
+}
