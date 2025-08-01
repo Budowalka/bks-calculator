@@ -308,19 +308,32 @@ export async function uploadPDFToAirtableEstimate(
     // Convert buffer to base64 (required by Airtable API)
     const base64Data = pdfBuffer.toString('base64');
     
-    // Create attachment object for Airtable (without id as it will be generated)
-    const attachment = {
+    // Create attachment object for Airtable - using partial type to avoid ID requirement
+    const attachment: Partial<{
+      id: string;
+      filename: string;
+      type: string;
+      size: number;
+      url: string;
+    }> = {
       filename: filename,
       type: 'application/pdf',
       size: pdfBuffer.length,
       url: `data:application/pdf;base64,${base64Data}`
     };
 
-    // Update the estimate record with PDF attachment and created date
+    // First update with PDF created date
     await base(TABLES.ESTIMATES).update(estimateId, {
-      'pdf_attachment': [attachment],
       'pdf_created_date': new Date().toISOString()
     });
+
+    // Then update with attachment using a more permissive approach
+    const updateFields: Record<string, unknown> = {
+      'pdf_attachment': [attachment]
+    };
+    
+    // @ts-expect-error - Bypassing TypeScript for Airtable attachment upload
+    await base(TABLES.ESTIMATES).update(estimateId, updateFields);
 
     console.log(`PDF successfully uploaded to estimate ${estimateId}`);
   } catch (error) {
