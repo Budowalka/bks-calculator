@@ -401,8 +401,12 @@ export async function uploadPDFToAirtableEstimate(
       }
     }
 
-    // Clean up temporary PDF after successful upload
-    console.log('Cleaning up temporary PDF after successful upload...');
+    // Wait for Airtable to actually download the PDF before cleaning up
+    console.log('Waiting for Airtable to download PDF before cleanup...');
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+    
+    // Clean up temporary PDF after Airtable has had time to download
+    console.log('Cleaning up temporary PDF after Airtable download window...');
     await cleanupPDFAfterUpload(filename);
     
     console.log(`PDF processing completed for estimate ${estimateId}`);
