@@ -62,6 +62,52 @@ export async function POST(request: NextRequest) {
     // Create estimate items in Airtable
     await createEstimateItems(estimateId, quote, pricingComponents);
 
+    // Automated workflow: Generate preview PDF and send email
+    try {
+      console.log('Starting automated workflow for estimate:', estimateId);
+      
+      // Call generate-preview-pdf API
+      const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          estimateId: estimateId,
+          returnPdf: false // Don't return PDF, just generate and save to Airtable
+        })
+      });
+
+      if (pdfResponse.ok) {
+        console.log('Preview PDF generated successfully');
+        
+        // Call send-quote-email API
+        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            estimateId: estimateId,
+            generatePdfIfMissing: true // Generate PDF if it wasn't created above
+          })
+        });
+
+        if (emailResponse.ok) {
+          console.log('Quote email sent successfully');
+        } else {
+          const emailError = await emailResponse.text();
+          console.error('Failed to send quote email:', emailError);
+        }
+      } else {
+        const pdfError = await pdfResponse.text();
+        console.error('Failed to generate preview PDF:', pdfError);
+      }
+    } catch (automationError) {
+      console.error('Error in automated workflow:', automationError);
+      // Don't fail the main response if automation fails
+    }
+
     // Prepare response
     const response: QuoteResponse = {
       success: true,
@@ -75,7 +121,7 @@ export async function POST(request: NextRequest) {
       },
       next_steps: {
         title: "Nästa steg",
-        content: "Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök. Vid hembesöket kommer vi att göra exakta mätningar och ge dig en bindande offert.",
+        content: "Du får en kopia av denna offert via e-post inom 5 minuter. Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök där du får en bindande offert.",
         cta_text: "Väntar på ditt svar",
         cta_url: "#"
       }

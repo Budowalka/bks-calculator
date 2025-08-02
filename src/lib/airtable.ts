@@ -343,7 +343,7 @@ export async function uploadPDFToAirtableEstimate(
     };
 
     // Use Airtable's direct upload API
-    const uploadUrl = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${estimateId}/pdf_attachment/uploadAttachment`;
+    const uploadUrl = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${estimateId}/fldj1yYgAFldG0VmQ/uploadAttachment`;
     
     console.log('Uploading PDF directly to Airtable...');
     const response = await fetch(uploadUrl, {
