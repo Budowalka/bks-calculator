@@ -66,6 +66,7 @@ export interface Quote {
 export interface QuoteResponse {
   success: boolean;
   quote?: Quote;
+  customerInfo?: CustomerInfo;
   disclaimer: {
     title: string;
     content: string;

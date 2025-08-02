@@ -62,51 +62,53 @@ export async function POST(request: NextRequest) {
     // Create estimate items in Airtable
     await createEstimateItems(estimateId, quote, pricingComponents);
 
-    // Automated workflow: Generate preview PDF and send email
-    try {
-      console.log('Starting automated workflow for estimate:', estimateId);
-      
-      // Call generate-preview-pdf API
-      const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          estimateId: estimateId,
-          returnPdf: false // Don't return PDF, just generate and save to Airtable
-        })
-      });
-
-      if (pdfResponse.ok) {
-        console.log('Preview PDF generated successfully');
+    // Automated workflow: Generate preview PDF and send email (asynchronous)
+    // Don't await this - let it run in the background to improve UX
+    setImmediate(async () => {
+      try {
+        console.log('Starting asynchronous automated workflow for estimate:', estimateId);
         
-        // Call send-quote-email API
-        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+        // Call generate-preview-pdf API
+        const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             estimateId: estimateId,
-            generatePdfIfMissing: true // Generate PDF if it wasn't created above
+            returnPdf: false // Don't return PDF, just generate and save to Airtable
           })
         });
 
-        if (emailResponse.ok) {
-          console.log('Quote email sent successfully');
+        if (pdfResponse.ok) {
+          console.log('Preview PDF generated successfully');
+          
+          // Call send-quote-email API
+          const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              estimateId: estimateId,
+              generatePdfIfMissing: true // Generate PDF if it wasn't created above
+            })
+          });
+
+          if (emailResponse.ok) {
+            console.log('Quote email sent successfully');
+          } else {
+            const emailError = await emailResponse.text();
+            console.error('Failed to send quote email:', emailError);
+          }
         } else {
-          const emailError = await emailResponse.text();
-          console.error('Failed to send quote email:', emailError);
+          const pdfError = await pdfResponse.text();
+          console.error('Failed to generate preview PDF:', pdfError);
         }
-      } else {
-        const pdfError = await pdfResponse.text();
-        console.error('Failed to generate preview PDF:', pdfError);
+      } catch (automationError) {
+        console.error('Error in asynchronous automated workflow:', automationError);
       }
-    } catch (automationError) {
-      console.error('Error in automated workflow:', automationError);
-      // Don't fail the main response if automation fails
-    }
+    });
 
     // Prepare response
     const response: QuoteResponse = {
@@ -115,13 +117,14 @@ export async function POST(request: NextRequest) {
         ...quote,
         quote_id: estimateId
       },
+      customerInfo: customerInfo,
       disclaimer: {
         title: "Viktig information om din offert",
         content: "Detta är en preliminär prisuppskattning baserad på de uppgifter du angett. Det slutgiltiga priset fastställs efter ett kostnadsfritt hembesök där vi gör exakta mätningar och bedömer eventuella specifika förutsättningar på din fastighet."
       },
       next_steps: {
         title: "Nästa steg",
-        content: "Du får en kopia av denna offert via e-post inom 5 minuter. Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök där du får en bindande offert.",
+        content: "En kopia av denna offert skickas till din e-post inom några minuter. Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök där du får en bindande offert.",
         cta_text: "Väntar på ditt svar",
         cta_url: "#"
       }

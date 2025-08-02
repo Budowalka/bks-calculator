@@ -83,6 +83,7 @@ export async function createLead(
       'Lead Last Name': customerInfo.last_name,  
       'Lead Phone Number': customerInfo.phone,
       'Lead Email': customerInfo.email,
+      'Full Address': customerInfo.address,
       'materialval': formData.materialval,
       'area': formData.area,
       'forberedelse': formData.forberedelse,

@@ -14,7 +14,7 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
     return null;
   }
 
-  const { quote, disclaimer } = quoteData;
+  const { quote, disclaimer, customerInfo } = quoteData;
 
   return (
     <div className="space-y-6">
@@ -89,7 +89,7 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
       </Alert>
 
       {/* Consultation CTA */}
-      <ConsultationCTA />
+      <ConsultationCTA customerInfo={customerInfo} />
 
       {/* Additional Information */}
       <Alert>

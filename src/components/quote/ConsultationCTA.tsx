@@ -1,12 +1,28 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarCheck, MapPin, Calculator } from 'lucide-react';
+import { CustomerInfo } from '@/lib/types';
+import { generateCalLink } from '@/lib/cal-link-generator';
 
-export function ConsultationCTA() {
+interface ConsultationCTAProps {
+  customerInfo?: CustomerInfo;
+}
+
+export function ConsultationCTA({ customerInfo }: ConsultationCTAProps) {
   const handleBookConsultation = () => {
-    // TODO: Integrate with calendar booking system
-    // For now, could redirect to external calendar or show contact info
-    window.open('tel:+46123456789', '_self');
+    if (customerInfo) {
+      // Generate Cal.com link with pre-filled customer data
+      const calLink = generateCalLink({
+        firstName: customerInfo.first_name,
+        lastName: customerInfo.last_name,
+        email: customerInfo.email,
+        phone: customerInfo.phone
+      });
+      window.open(calLink, '_blank');
+    } else {
+      // Fallback to default Cal.com link
+      window.open('https://cal.com/bksentreprenad/platsbesok', '_blank');
+    }
   };
 
   return (
@@ -43,10 +59,10 @@ export function ConsultationCTA() {
           <Button 
             onClick={handleBookConsultation}
             size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base font-semibold"
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-base font-semibold"
           >
             <CalendarCheck className="w-5 h-5 mr-2" />
-            Boka kostnadsfritt hembesök
+            Boka din platsbesiktning nu
           </Button>
         </div>
 
