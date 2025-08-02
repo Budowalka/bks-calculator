@@ -62,38 +62,51 @@ export async function POST(request: NextRequest) {
     // Create estimate items in Airtable
     await createEstimateItems(estimateId, quote, pricingComponents);
 
-    // Automated workflow: Generate preview PDF and send email (asynchronous)
-    // Don't await this - let it run in the background to improve UX
-    setImmediate(async () => {
+    // Automated workflow: Generate preview PDF and send email (background)
+    // Start background workflow but don't await - let it run while response is sent
+    const backgroundWorkflow = (async () => {
       try {
-        console.log('Starting asynchronous automated workflow for estimate:', estimateId);
+        console.log('Starting background automated workflow for estimate:', estimateId);
         
-        // Call generate-preview-pdf API
-        const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            estimateId: estimateId,
-            returnPdf: false // Don't return PDF, just generate and save to Airtable
-          })
-        });
-
-        if (pdfResponse.ok) {
-          console.log('Preview PDF generated successfully');
-          
-          // Call send-quote-email API
-          const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+        // Add small delay to ensure main response is sent first
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Call generate-preview-pdf API with timeout
+        const pdfResponse = await Promise.race([
+          fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               estimateId: estimateId,
-              generatePdfIfMissing: true // Generate PDF if it wasn't created above
+              returnPdf: false // Don't return PDF, just generate and save to Airtable
             })
-          });
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('PDF generation timeout')), 8000)
+          )
+        ]) as Response;
+
+        if (pdfResponse.ok) {
+          console.log('Preview PDF generated successfully');
+          
+          // Call send-quote-email API with timeout
+          const emailResponse = await Promise.race([
+            fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                estimateId: estimateId,
+                generatePdfIfMissing: true // Generate PDF if it wasn't created above
+              })
+            }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Email sending timeout')), 8000)
+            )
+          ]) as Response;
 
           if (emailResponse.ok) {
             console.log('Quote email sent successfully');
@@ -106,9 +119,17 @@ export async function POST(request: NextRequest) {
           console.error('Failed to generate preview PDF:', pdfError);
         }
       } catch (automationError) {
-        console.error('Error in asynchronous automated workflow:', automationError);
+        console.error('Error in background automated workflow:', automationError);
       }
-    });
+    })();
+
+    // Don't await backgroundWorkflow - let it run in background
+
+    // Give background workflow a moment to start before sending response
+    await Promise.race([
+      new Promise(resolve => setTimeout(resolve, 200)), // Small delay
+      backgroundWorkflow // In case it finishes very quickly
+    ]);
 
     // Prepare response
     const response: QuoteResponse = {
