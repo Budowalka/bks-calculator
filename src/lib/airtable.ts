@@ -313,7 +313,7 @@ export async function getEstimateForPDF(estimateId: string) {
 }
 
 /**
- * Upload PDF to Airtable as attachment and update estimate record
+ * Upload PDF directly to Airtable using the direct upload API
  */
 export async function uploadPDFToAirtableEstimate(
   estimateId: string,
@@ -321,138 +321,70 @@ export async function uploadPDFToAirtableEstimate(
   filename: string
 ): Promise<void> {
   try {
-    console.log('Uploading PDF to Airtable:', { estimateId, filename, bufferSize: pdfBuffer.length });
+    console.log('Uploading PDF directly to Airtable:', { estimateId, filename, bufferSize: pdfBuffer.length });
     
-    // Check if PDF is too large (Airtable has limits)
-    if (pdfBuffer.length > 20 * 1024 * 1024) { // 20MB limit
-      throw new Error(`PDF too large: ${pdfBuffer.length} bytes. Maximum is 20MB.`);
+    // Check if PDF is too large for direct upload (5MB limit)
+    if (pdfBuffer.length > 5 * 1024 * 1024) { // 5MB limit for direct upload
+      throw new Error(`PDF too large for direct upload: ${pdfBuffer.length} bytes. Maximum is 5MB.`);
     }
     
-    // First update with PDF created date
+    // Update PDF created date
     console.log('Updating pdf_created_date field...');
     await base(TABLES.ESTIMATES).update(estimateId, {
       'pdf_created_date': new Date().toISOString()
     });
     console.log('PDF created date updated successfully');
 
-    // Store PDF temporarily FIRST, before giving URL to Airtable
-    console.log('Storing PDF temporarily before Airtable upload...');
-    await storePDFTemporarily(filename, pdfBuffer);
-    
-    // Wait a moment to ensure PDF is stored
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Verify PDF is stored
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bks-calculator.vercel.app';
-    const tempPdfUrl = `${baseUrl}/api/serve-pdf/${filename}`;
-    
-    // Verify PDF is accessible before proceeding
-    try {
-      const verifyResponse = await fetch(tempPdfUrl);
-      if (!verifyResponse.ok) {
-        throw new Error('PDF not accessible after storage');
-      }
-      console.log('PDF verified as accessible, proceeding with Airtable upload...');
-    } catch (verifyError) {
-      console.error('PDF verification failed:', verifyError);
-      throw new Error('PDF storage verification failed');
-    }
-
-    // Now provide Airtable with the URL to fetch from
-    const updateData: Record<string, unknown> = {
-      'pdf_attachment': [{
-        filename: filename,
-        url: tempPdfUrl
-      }]
+    // Prepare direct upload data
+    const uploadData = {
+      contentType: "application/pdf",
+      file: pdfBuffer.toString('base64'),
+      filename: filename
     };
+
+    // Use Airtable's direct upload API
+    const uploadUrl = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${estimateId}/pdf_attachment/uploadAttachment`;
     
-    // Add retry logic for Airtable upload
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    while (retryCount < maxRetries) {
-      try {
-        // @ts-expect-error - Airtable attachment format requires specific typing
-        await base(TABLES.ESTIMATES).update(estimateId, updateData);
-        console.log('PDF attachment updated successfully via URL fetch');
-        break;
-      } catch (attachmentError) {
-        retryCount++;
-        console.error(`Airtable upload attempt ${retryCount} failed:`, attachmentError);
-        
-        if (retryCount >= maxRetries) {
-          console.error('All retry attempts failed, falling back to notes update');
-          
-          // Fallback: Update notes with PDF info
-          const existingRecord = await base(TABLES.ESTIMATES).find(estimateId);
-          const existingNotes = existingRecord.get('Notes') as string || '';
-          const newNotes = existingNotes ? 
-            `${existingNotes}\n\nPDF genererat: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB)` :
-            `PDF genererat: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB)`;
-          
-          await base(TABLES.ESTIMATES).update(estimateId, {
-            'Notes': newNotes
-          });
-          console.log('Updated estimate with PDF info in notes as fallback');
-        } else {
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-        }
-      }
+    console.log('Uploading PDF directly to Airtable...');
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(uploadData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Direct upload failed: ${response.status} - ${errorText}`);
     }
 
-    // Don't cleanup immediately - let Airtable download the PDF first
-    // The 10-minute automatic cleanup will handle cleanup later
-    console.log('PDF uploaded successfully. Automatic cleanup will occur in 10 minutes.');
+    const result = await response.json();
+    console.log('PDF uploaded successfully via direct upload API');
+    console.log('Upload result:', { attachmentId: result.fields?.pdf_attachment?.[0]?.id, size: result.fields?.pdf_attachment?.[0]?.size });
     
     console.log(`PDF processing completed for estimate ${estimateId}`);
   } catch (error) {
     console.error('Error uploading PDF to Airtable:', error);
     
-    // Clean up immediately on error since Airtable won't download it
-    console.log('Cleaning up PDF immediately due to upload error...');
-    await cleanupPDFAfterUpload(filename);
+    // Fallback: Update notes with PDF info if direct upload fails
+    try {
+      const existingRecord = await base(TABLES.ESTIMATES).find(estimateId);
+      const existingNotes = existingRecord.get('Notes') as string || '';
+      const newNotes = existingNotes ? 
+        `${existingNotes}\n\nPDF generering misslyckades: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB) - ${error instanceof Error ? error.message : 'Unknown error'}` :
+        `PDF generering misslyckades: ${filename} (${(pdfBuffer.length / 1024).toFixed(1)} KB) - ${error instanceof Error ? error.message : 'Unknown error'}`;
+      
+      await base(TABLES.ESTIMATES).update(estimateId, {
+        'Notes': newNotes
+      });
+      console.log('Updated estimate with PDF error info in notes as fallback');
+    } catch (fallbackError) {
+      console.error('Fallback notes update also failed:', fallbackError);
+    }
     
     throw new Error('Failed to upload PDF to Airtable');
   }
 }
 
-/**
- * Store PDF temporarily via API call
- */
-async function storePDFTemporarily(filename: string, buffer: Buffer): Promise<void> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bks-calculator.vercel.app';
-  
-  const response = await fetch(`${baseUrl}/api/store-pdf`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      filename: filename,
-      pdfBase64: buffer.toString('base64')
-    })
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to store PDF temporarily: ${response.status} - ${errorText}`);
-  }
-  
-  console.log('PDF stored temporarily via API call');
-}
-
-/**
- * Clean up temporary PDF after successful upload to Airtable
- */
-async function cleanupPDFAfterUpload(filename: string): Promise<void> {
-  try {
-    // Import cleanup function dynamically to avoid circular dependencies
-    const { cleanupOldPDF } = await import('./pdf-storage');
-    
-    // Clean up from memory storage
-    cleanupOldPDF(filename);
-    console.log(`Successfully cleaned up temporary PDF: ${filename}`);
-  } catch (error) {
-    console.error('Error cleaning up temporary PDF:', error);
-    // Don't throw - this is not critical for the main workflow
-  }
-}
