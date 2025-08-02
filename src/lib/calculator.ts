@@ -149,7 +149,7 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor', 
             'Bortforsling',
-            Math.max(1, Math.round((formData.area * 0.4 * 0.1) / 8)), // 400mm depth * 10% waste factor, divided by 8m³ container, minimum 1 container
+            Math.max(1, Math.round((formData.area * 0.4 * 1.3) / 8)), // 400mm depth * 30% swell factor, divided by 8m³ container, minimum 1 container
             'st'
           );
 
@@ -170,7 +170,7 @@ export class BKSCalculator {
           const wasteRemoval = this.createQuoteItem(
             'Bortforsling av schaktmassor',
             'Bortforsling', 
-            Math.max(1, Math.round((formData.area * 0.2 * 0.1) / 8)), // 200mm depth * 10% waste factor, divided by 8m³ container, minimum 1 container
+            Math.max(1, Math.round((formData.area * 0.2 * 1.3) / 8)), // 200mm depth * 30% swell factor, divided by 8m³ container, minimum 1 container
             'st'
           );
 
