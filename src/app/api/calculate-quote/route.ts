@@ -62,74 +62,62 @@ export async function POST(request: NextRequest) {
     // Create estimate items in Airtable
     await createEstimateItems(estimateId, quote, pricingComponents);
 
-    // Automated workflow: Generate preview PDF and send email (background)
-    // Start background workflow but don't await - let it run while response is sent
-    const backgroundWorkflow = (async () => {
-      try {
-        console.log('Starting background automated workflow for estimate:', estimateId);
-        
-        // Add small delay to ensure main response is sent first
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Call generate-preview-pdf API with timeout
-        const pdfResponse = await Promise.race([
-          fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
+    // Automated workflow: PDF async, Email sync
+    try {
+      console.log('Starting automated workflow for estimate:', estimateId);
+      
+      // PDF Generation - Asynchronous (works fine in background)
+      const pdfWorkflow = (async () => {
+        try {
+          console.log('Starting background PDF generation for estimate:', estimateId);
+          const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               estimateId: estimateId,
-              returnPdf: false // Don't return PDF, just generate and save to Airtable
+              returnPdf: false
             })
-          }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('PDF generation timeout')), 8000)
-          )
-        ]) as Response;
+          });
 
-        if (pdfResponse.ok) {
-          console.log('Preview PDF generated successfully');
-          
-          // Call send-quote-email API with timeout
-          const emailResponse = await Promise.race([
-            fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                estimateId: estimateId,
-                generatePdfIfMissing: true // Generate PDF if it wasn't created above
-              })
-            }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Email sending timeout')), 8000)
-            )
-          ]) as Response;
-
-          if (emailResponse.ok) {
-            console.log('Quote email sent successfully');
+          if (pdfResponse.ok) {
+            console.log('Preview PDF generated successfully in background');
           } else {
-            const emailError = await emailResponse.text();
-            console.error('Failed to send quote email:', emailError);
+            const pdfError = await pdfResponse.text();
+            console.error('Failed to generate preview PDF:', pdfError);
           }
-        } else {
-          const pdfError = await pdfResponse.text();
-          console.error('Failed to generate preview PDF:', pdfError);
+        } catch (pdfError) {
+          console.error('Error in background PDF generation:', pdfError);
         }
-      } catch (automationError) {
-        console.error('Error in background automated workflow:', automationError);
+      })();
+
+      // Don't await PDF - let it run in background
+
+      // Email Sending - Synchronous (to ensure delivery)
+      console.log('Sending quote email synchronously...');
+      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          estimateId: estimateId,
+          generatePdfIfMissing: true // Generate PDF if background PDF isn't ready yet
+        })
+      });
+
+      if (emailResponse.ok) {
+        console.log('Quote email sent successfully');
+      } else {
+        const emailError = await emailResponse.text();
+        console.error('Failed to send quote email:', emailError);
       }
-    })();
 
-    // Don't await backgroundWorkflow - let it run in background
-
-    // Give background workflow a moment to start before sending response
-    await Promise.race([
-      new Promise(resolve => setTimeout(resolve, 200)), // Small delay
-      backgroundWorkflow // In case it finishes very quickly
-    ]);
+    } catch (automationError) {
+      console.error('Error in automated workflow:', automationError);
+      // Don't fail the main response if automation fails
+    }
 
     // Prepare response
     const response: QuoteResponse = {
@@ -145,7 +133,7 @@ export async function POST(request: NextRequest) {
       },
       next_steps: {
         title: "Nästa steg",
-        content: "En kopia av denna offert skickas till din e-post inom några minuter. Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök där du får en bindande offert.",
+        content: "En kopia av denna offert har skickats till din e-post. Vi kontaktar dig inom 24 timmar för att boka ett kostnadsfritt hembesök där du får en bindande offert.",
         cta_text: "Väntar på ditt svar",
         cta_url: "#"
       }

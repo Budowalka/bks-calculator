@@ -97,7 +97,7 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
         <AlertDescription>
           <div className="font-medium mb-2">Vad händer nu?</div>
           <ul className="text-sm space-y-1">
-            <li>• Du får en kopia av denna offert via e-post inom 5 minuter</li>
+            <li>• En kopia av denna offert har skickats till din e-post</li>
             <li>• Vi kontaktar dig inom 24 timmar för att boka hembesök</li>
             <li>• Hembesöket är kostnadsfritt och utan förpliktelser</li>
             <li>• Vid hembesöket får du en bindande offert med exakta priser</li>
