@@ -401,9 +401,14 @@ export async function uploadPDFToAirtableEstimate(
       }
     }
 
+    // Clean up temporary PDF after successful upload
+    console.log('Cleaning up temporary PDF after successful upload...');
+    await cleanupPDFAfterUpload(filename);
+    
     console.log(`PDF processing completed for estimate ${estimateId}`);
   } catch (error) {
     console.error('Error uploading PDF to Airtable:', error);
+    // Don't cleanup on error - let the 10-minute timer handle it
     throw new Error('Failed to upload PDF to Airtable');
   }
 }
@@ -429,4 +434,21 @@ async function storePDFTemporarily(filename: string, buffer: Buffer): Promise<vo
   }
   
   console.log('PDF stored temporarily via API call');
+}
+
+/**
+ * Clean up temporary PDF after successful upload to Airtable
+ */
+async function cleanupPDFAfterUpload(filename: string): Promise<void> {
+  try {
+    // Import cleanup function dynamically to avoid circular dependencies
+    const { cleanupOldPDF } = await import('./pdf-storage');
+    
+    // Clean up from memory storage
+    cleanupOldPDF(filename);
+    console.log(`Successfully cleaned up temporary PDF: ${filename}`);
+  } catch (error) {
+    console.error('Error cleaning up temporary PDF:', error);
+    // Don't throw - this is not critical for the main workflow
+  }
 }
