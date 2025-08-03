@@ -63,14 +63,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint for testing - always returns PDF directly
+// GET endpoint - generates PDF, uploads to Airtable, and returns PDF
 export async function GET(request: NextRequest) {
   try {
     console.log('GET /api/generate-pdf called');
     
     const { searchParams } = new URL(request.url);
     const estimateId = searchParams.get('estimateId');
+    const uploadToAirtable = searchParams.get('uploadToAirtable') !== 'false'; // Default to true
+    
     console.log('EstimateId from query params:', estimateId);
+    console.log('Upload to Airtable:', uploadToAirtable);
 
     if (!estimateId) {
       console.log('No estimateId provided in query params');
@@ -117,8 +120,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Upload PDF to Airtable (if enabled)
+    if (uploadToAirtable) {
+      try {
+        console.log('Uploading PDF to Airtable...');
+        await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+        console.log('PDF uploaded to Airtable successfully');
+      } catch (uploadError) {
+        console.error('Error uploading PDF to Airtable:', uploadError);
+        // Continue to return PDF even if upload fails
+        console.log('Continuing to return PDF despite upload failure');
+      }
+    } else {
+      console.log('Skipping Airtable upload (uploadToAirtable=false)');
+    }
+
     console.log('Returning PDF response...');
-    // Return PDF as response (for testing only - no Airtable upload)
+    // Return PDF as response
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
