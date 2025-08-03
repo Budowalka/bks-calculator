@@ -236,10 +236,13 @@ export async function getEstimateForPDF(estimateId: string) {
     // Get linked lead data
     const leadIds = estimateRecord.get('Lead') as string[] | undefined;
     let leadData = null;
+    let leadId = null;
     if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
       try {
-        const leadRecord = await base(TABLES.LEAD_DATA).find(leadIds[0]);
+        leadId = leadIds[0]; // Store the lead ID for later use
+        const leadRecord = await base(TABLES.LEAD_DATA).find(leadId);
         leadData = {
+          id: leadId, // Include the lead ID in the lead data
           first_name: (leadRecord.get('Lead First Name') as string) || '',
           last_name: (leadRecord.get('Lead Last Name') as string) || '',
           phone: (leadRecord.get('Lead Phone Number') as string) || '',
@@ -386,6 +389,63 @@ export async function uploadPDFToAirtableEstimate(
     }
     
     throw new Error('Failed to upload PDF to Airtable');
+  }
+}
+
+/**
+ * Update the Sent Messages field in Lead_Data table
+ */
+export async function updateLeadSentMessages(
+  leadId: string,
+  emailSubject: string,
+  recipientEmail: string,
+  messageId?: string,
+  pdfAttached: boolean = false
+): Promise<void> {
+  try {
+    console.log('Updating sent messages for lead:', leadId);
+    
+    // Get current sent messages
+    const leadRecord = await base(TABLES.LEAD_DATA).find(leadId);
+    const existingSentMessages = (leadRecord.get('Sent Messages') as string) || '';
+    
+    // Create new message entry
+    const timestamp = new Date().toLocaleString('sv-SE', {
+      timeZone: 'Europe/Stockholm',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    const newMessage = `
+### ${emailSubject}
+**Skickat:** ${timestamp}
+**Till:** ${recipientEmail}
+**PDF bifogad:** ${pdfAttached ? 'Ja' : 'Nej'}
+${messageId ? `**Message ID:** ${messageId}` : ''}
+
+---
+`;
+    
+    // Combine with existing messages
+    const updatedSentMessages = existingSentMessages ? 
+      `${newMessage}${existingSentMessages}` : 
+      newMessage;
+    
+    // Update both Sent Messages and Last Email Sent fields
+    await base(TABLES.LEAD_DATA).update(leadId, {
+      'Sent Messages': updatedSentMessages,
+      'Last Email Sent': new Date().toISOString()
+    });
+    
+    console.log('Successfully updated sent messages for lead:', leadId);
+  } catch (error) {
+    console.error('Error updating sent messages:', error);
+    // Don't throw error - this shouldn't break the email sending process
+    console.log('Continuing despite sent messages update failure');
   }
 }
 

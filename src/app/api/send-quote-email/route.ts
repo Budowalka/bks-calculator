@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEstimateForPDF } from '@/lib/airtable';
+import { getEstimateForPDF, updateLeadSentMessages } from '@/lib/airtable';
 import { generatePreviewPDF, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
 import { sendQuoteEmail, validateEmailConfig } from '@/lib/email-service';
 
@@ -65,10 +65,20 @@ export async function POST(request: NextRequest) {
         console.log('Generating preview PDF for email attachment...');
         pdfBuffer = await generatePreviewPDF(estimate);
         pdfFilename = generatePreviewPDFFilename(estimate);
-        console.log('Preview PDF generated for email, size:', pdfBuffer.length);
+        
+        // Validate PDF buffer
+        if (!pdfBuffer || pdfBuffer.length === 0) {
+          console.error('PDF generation returned empty buffer');
+          pdfBuffer = undefined;
+          pdfFilename = undefined;
+        } else {
+          console.log('Preview PDF generated successfully for email, size:', pdfBuffer.length, 'bytes');
+        }
       } catch (pdfError) {
         console.error('Error generating PDF for email:', pdfError);
-        // Continue without PDF attachment if generation fails
+        // Reset PDF variables to ensure no invalid data is passed
+        pdfBuffer = undefined;
+        pdfFilename = undefined;
         console.log('Continuing to send email without PDF attachment');
       }
     }
@@ -107,6 +117,21 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Quote email sent successfully');
+
+    // Update sent messages tracking in Lead_Data table
+    if (estimate.lead?.id) {
+      const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
+      await updateLeadSentMessages(
+        estimate.lead.id,
+        emailSubject,
+        estimate.lead.email,
+        emailResult.messageId,
+        !!pdfBuffer
+      );
+      console.log('Sent messages tracking updated for lead:', estimate.lead.id);
+    } else {
+      console.warn('No lead ID available for sent messages tracking');
+    }
 
     return NextResponse.json({
       success: true,

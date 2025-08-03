@@ -267,11 +267,34 @@ export async function sendQuoteEmail(
     // Prepare attachments if PDF is provided
     const attachments = [];
     if (pdfBuffer && pdfFilename) {
-      attachments.push({
-        content: pdfBuffer.toString('base64'),
+      console.log('Preparing PDF attachment:', {
         filename: pdfFilename,
-        type: 'application/pdf',
-        disposition: 'attachment'
+        bufferSize: pdfBuffer.length,
+        bufferType: typeof pdfBuffer,
+        isBuffer: Buffer.isBuffer(pdfBuffer)
+      });
+      
+      try {
+        const base64Content = pdfBuffer.toString('base64');
+        console.log('PDF converted to base64, length:', base64Content.length);
+        
+        attachments.push({
+          content: base64Content,
+          filename: pdfFilename,
+          type: 'application/pdf',
+          disposition: 'attachment'
+        });
+        
+        console.log('PDF attachment prepared successfully');
+      } catch (conversionError) {
+        console.error('Error converting PDF to base64:', conversionError);
+        // Continue without attachment if conversion fails
+      }
+    } else {
+      console.log('No PDF attachment - buffer or filename missing:', {
+        hasBuffer: !!pdfBuffer,
+        hasFilename: !!pdfFilename,
+        bufferLength: pdfBuffer?.length || 0
       });
     }
 
@@ -292,7 +315,22 @@ export async function sendQuoteEmail(
     };
 
     // Send email
+    console.log('Sending email with SendGrid:', {
+      to: msg.to,
+      from: msg.from,
+      subject: msg.subject,
+      attachmentCount: attachments.length,
+      hasHtmlContent: !!msg.html,
+      hasTextContent: !!msg.text
+    });
+    
     const response = await sgMail.send(msg);
+    
+    console.log('Email sent successfully:', {
+      messageId: response[0]?.headers?.['x-message-id'],
+      statusCode: response[0]?.statusCode,
+      attachmentsSent: attachments.length
+    });
     
     return {
       success: true,
