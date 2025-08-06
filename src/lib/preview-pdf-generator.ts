@@ -20,13 +20,26 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
     return new Date(dateString).toLocaleDateString('sv-SE');
   };
 
+  // Function to extract stage number for sorting
+  const getStageNumber = (arbetsmoment: string): number => {
+    const match = arbetsmoment.match(/^(\d+)\s*-\s*/);
+    return match ? parseInt(match[1], 10) : 999;
+  };
+
   // Function to clean category names by removing sort numbers
   const cleanCategoryName = (category: string): string => {
     return category.replace(/^\d+\s*-\s*/, '');
   };
 
-  // Group items by arbetsmoment (work category)
-  const groupedItems = estimate.items.reduce((groups, item) => {
+  // Sort items by stage number first
+  const sortedItems = [...estimate.items].sort((a, b) => {
+    const stageA = getStageNumber(a.arbetsmoment || '');
+    const stageB = getStageNumber(b.arbetsmoment || '');
+    return stageA - stageB;
+  });
+
+  // Group sorted items by arbetsmoment (work category)
+  const groupedItems = sortedItems.reduce((groups, item) => {
     const category = cleanCategoryName(item.arbetsmoment || 'Övriga arbeten');
     if (!groups[category]) {
       groups[category] = [];
@@ -35,11 +48,12 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
     return groups;
   }, {} as Record<string, EstimateItem[]>);
 
-  // Calculate totals by category
+  // Calculate totals by category in sorted order
   const categoryTotals = Object.entries(groupedItems).map(([category, items]) => ({
     category,
     total: items.reduce((sum, item) => sum + item.line_total, 0),
-    items
+    items,
+    stageNumber: getStageNumber(items[0]?.arbetsmoment || '') // For additional sorting if needed
   }));
 
   const clientName = estimate.lead 
@@ -297,6 +311,19 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
 
         <p>Baserat på dina val har vi skapat denna preliminära offert för ditt stenläggningsprojekt. Detta är en automatiskt genererad uppskattning som ger dig en bra överblick över kostnaderna.</p>
 
+        <div class="disclaimer-box">
+          <div class="disclaimer-title">⚠️ Viktigt att veta - Ingår INTE i priset:</div>
+          <div class="disclaimer-content">
+            <ul>
+              <li><strong>Betongplattor och marksten</strong></li>
+              <li><strong>Små- och storgatsten</strong></li>
+              <li><strong>Granithällar och skifferplattor</strong></li>
+              <li><strong>Eventuellt extra grävarbete vid djupare markförberedelse</strong></li>
+            </ul>
+            <p><strong>Obs:</strong> Om du valde asfalt som slutbeläggning ingår detta i priset. Övriga stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök baserat på typ, färg och tillverkare.</p>
+          </div>
+        </div>
+
         <h2>Din preliminära offert</h2>
 
         <table class="estimate-table">
@@ -331,19 +358,6 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
 
         <p><strong>Beräknad arbetstid:</strong> ${estimate.estimated_work_days} arbetsdagar</p>
         <p><strong>Offerten gäller till:</strong> ${formatDate(estimate.valid_until)}</p>
-
-        <div class="disclaimer-box">
-          <div class="disclaimer-title">⚠️ Viktigt att veta - Ingår INTE i priset:</div>
-          <div class="disclaimer-content">
-            <ul>
-              <li><strong>Betongplattor och marksten</strong></li>
-              <li><strong>Små- och storgatsten</strong></li>
-              <li><strong>Granithällar och skifferplattor</strong></li>
-              <li><strong>Eventuellt extra grävarbete vid djupare markförberedelse</strong></li>
-            </ul>
-            <p><strong>Obs:</strong> Om du valde asfalt som slutbeläggning ingår detta i priset. Övriga stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök baserat på typ, färg och tillverkare.</p>
-          </div>
-        </div>
 
         <div class="cta-box">
           <div class="cta-title">🏠 Boka kostnadsfri platsbesiktning</div>
