@@ -1,7 +1,7 @@
 // Airtable integration for BKS Calculator
 
 import Airtable from 'airtable';
-import { PricingComponent, FormData, CustomerInfo, Quote } from './types';
+import { PricingComponent, FormData, CustomerInfo, Quote, MaterialUsage } from './types';
 
 // Initialize Airtable
 const base = new Airtable({
@@ -13,13 +13,62 @@ const TABLES = {
   PRICING_CATALOG: 'tblljFfeR14VehcrS',
   LEAD_DATA: 'tbljQFgvpPqYK3S8O', 
   ESTIMATES: 'tbl8DsoZbTVbSMLTb',
-  ESTIMATE_ITEMS: 'tblH45FhG3zGfHg8p'
+  ESTIMATE_ITEMS: 'tblH45FhG3zGfHg8p',
+  OFFER_COMPONENTS: 'tblyHVam347DcaPAP',
+  RESOURCES: 'tblqZzeBYScNTwBuq'
 } as const;
 
 // Cache for pricing data (in production, use Redis)
 let pricingCache: PricingComponent[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+
+/**
+ * Get material usage information for a pricing component from Offer Components table
+ */
+async function getMaterialUsageForComponent(componentId: string): Promise<MaterialUsage[]> {
+  try {
+    const offerComponents = await base(TABLES.OFFER_COMPONENTS)
+      .select({
+        filterByFormula: `{Offer Component} = "${componentId}"`,
+        fields: ['Resource Name', 'Resource Quantity per Unit']
+      })
+      .all();
+
+    const materialUsages: MaterialUsage[] = [];
+
+    for (const offerComp of offerComponents) {
+      const resourceIds = offerComp.get('Resource Name') as string[];
+      const quantityPerUnit = offerComp.get('Resource Quantity per Unit') as number;
+
+      if (!resourceIds || !quantityPerUnit) continue;
+
+      // Get resource information
+      for (const resourceId of resourceIds) {
+        try {
+          const resource = await base(TABLES.RESOURCES).find(resourceId);
+          const itemName = resource.get('Item Name') as string;
+          
+          if (itemName && (itemName.includes('Bärlager') || itemName.includes('Stenflis'))) {
+            const materialType = itemName.includes('Bärlager') ? 'Bärlager' : 'Stenflis';
+            materialUsages.push({
+              material_name: itemName,
+              material_type: materialType as 'Bärlager' | 'Stenflis',
+              quantity_per_unit: quantityPerUnit
+            });
+          }
+        } catch (resourceError) {
+          console.warn(`Could not fetch resource ${resourceId}:`, resourceError);
+        }
+      }
+    }
+
+    return materialUsages;
+  } catch (error) {
+    console.warn(`Error fetching material usage for component ${componentId}:`, error);
+    return [];
+  }
+}
 
 /**
  * Fetch pricing components from Airtable with caching
@@ -48,16 +97,32 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
       })
       .all();
 
-    const components: PricingComponent[] = records.map(record => ({
-      id: record.id,
-      'Component Name': record.get('Component Name') as string,
-      'Unit': record.get('Unit') as string,
-      'Unit Price': record.get('Unit Price') as number,
-      'Used in Automatic Calculator': record.get('Used in Automatic Calculator') as boolean,
-      'Stage': record.get('Stage') as string,
-      'labor_rate': record.get('labor_rate') as number,
-      'labor_max': record.get('labor_max') as number,
-    }));
+    const components: PricingComponent[] = [];
+    
+    for (const record of records) {
+      const component: PricingComponent = {
+        id: record.id,
+        'Component Name': record.get('Component Name') as string,
+        'Unit': record.get('Unit') as string,
+        'Unit Price': record.get('Unit Price') as number,
+        'Used in Automatic Calculator': record.get('Used in Automatic Calculator') as boolean,
+        'Stage': record.get('Stage') as string,
+        'labor_rate': record.get('labor_rate') as number,
+        'labor_max': record.get('labor_max') as number,
+      };
+
+      // Fetch material usage information for this component
+      try {
+        const materialUsages = await getMaterialUsageForComponent(record.id);
+        if (materialUsages.length > 0) {
+          component.materials_used = materialUsages;
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch materials for component ${component['Component Name']}:`, error);
+      }
+
+      components.push(component);
+    }
 
     // Update cache
     pricingCache = components;

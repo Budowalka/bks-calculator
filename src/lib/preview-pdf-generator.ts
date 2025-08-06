@@ -487,8 +487,11 @@ export function generatePreviewPDFFilename(estimate: EstimateData): string {
     ? `${estimate.lead.first_name}_${estimate.lead.last_name}`.replace(/\s+/g, '_')
     : 'kund';
   
-  const date = new Date().toISOString().split('T')[0];
-  const timestamp = Date.now(); // Add timestamp to ensure unique filenames
+  // Generate readable timestamp in YYYY-MM-DD_HH-mm-ss format
+  const now = new Date();
+  const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
+  const time = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-mm-ss
+  const readableTimestamp = `${date}_${time}`;
   
-  return `BKS_Preliminar_Offert_${estimate.estimate_nr}_${clientName}_${date}_${timestamp}.pdf`;
+  return `BKS_Preliminar_Offert_${estimate.estimate_nr}_${clientName}_${readableTimestamp}.pdf`;
 }

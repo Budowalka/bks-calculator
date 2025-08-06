@@ -80,6 +80,12 @@ export interface QuoteResponse {
   error?: string;
 }
 
+export interface MaterialUsage {
+  material_name: string;
+  material_type: 'Bärlager' | 'Stenflis';
+  quantity_per_unit: number; // tons per m²
+}
+
 export interface PricingComponent {
   id: string;
   'Component Name': string;
@@ -89,6 +95,7 @@ export interface PricingComponent {
   Stage?: string;
   labor_rate?: number;
   labor_max?: number;
+  materials_used?: MaterialUsage[]; // Materials from Offer Components
 }
 
 export interface MaterialOption {
