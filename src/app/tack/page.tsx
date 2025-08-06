@@ -13,26 +13,96 @@ export default function ThankYouPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Try to get quote data from localStorage
-    try {
-      const storedQuoteData = localStorage.getItem('bks-quote-data');
-      if (storedQuoteData) {
-        const parsedData = JSON.parse(storedQuoteData);
-        setQuoteData(parsedData);
-        // Clear the data after loading to prevent reuse
-        localStorage.removeItem('bks-quote-data');
-      } else {
-        // No quote data found, redirect back to calculator
-        router.push('/kalkyl');
-        return;
+    // Add navigation guard to prevent unwanted back/forward navigation
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.log('User attempting to leave thank you page');
+      e.preventDefault();
+      return ''; // Show browser's default confirmation dialog
+    };
+
+    // Add popstate handler to track navigation
+    const handlePopState = (e: PopStateEvent) => {
+      console.log('Browser navigation detected on thank you page:', e);
+      // Allow navigation but log it
+    };
+
+    // Add these listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    // Cleanup
+    const cleanup = () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+
+    // Main quote loading logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const loadQuoteData = () => {
+      try {
+        console.log(`Thank you page attempt ${retryCount + 1}, checking for quote data...`);
+        const storedQuoteData = localStorage.getItem('bks-quote-data');
+        console.log('Stored quote data found:', !!storedQuoteData);
+        
+        if (storedQuoteData) {
+          const parsedData = JSON.parse(storedQuoteData);
+          console.log('Quote data parsed successfully:', { 
+            success: parsedData.success, 
+            hasQuote: !!parsedData.quote,
+            quoteId: parsedData.quote?.quote_id 
+          });
+          
+          // Validate the data structure before using it
+          if (parsedData.success && parsedData.quote && parsedData.quote.items && Array.isArray(parsedData.quote.items)) {
+            setQuoteData(parsedData);
+            // Clear the data after loading to prevent reuse
+            localStorage.removeItem('bks-quote-data');
+            console.log('Quote data validated, loaded and cleared from localStorage');
+            setLoading(false);
+            return true; // Successfully loaded
+          } else {
+            console.error('Invalid quote data structure:', parsedData);
+            localStorage.removeItem('bks-quote-data'); // Clear invalid data
+            return false; // Failed validation
+          }
+        } else {
+          console.log('No quote data found in localStorage');
+          return false; // No data found
+        }
+      } catch (error) {
+        console.error('Error loading quote data:', error);
+        return false; // Error occurred
       }
-    } catch (error) {
-      console.error('Error loading quote data:', error);
-      router.push('/kalkyl');
-      return;
-    } finally {
-      setLoading(false);
-    }
+    };
+    
+    const attemptLoad = () => {
+      const success = loadQuoteData();
+      
+      if (success) {
+        return; // Successfully loaded, exit
+      }
+      
+      retryCount++;
+      if (retryCount < maxRetries) {
+        console.log(`Retrying in 1 second (attempt ${retryCount + 1}/${maxRetries})...`);
+        setTimeout(attemptLoad, 1000);
+      } else {
+        console.log('Max retries reached, redirecting to /kalkyl');
+        setLoading(false);
+        // Show error state for 3 seconds before redirecting
+        setTimeout(() => {
+          router.push('/kalkyl');
+        }, 3000);
+      }
+    };
+    
+    // Start the loading process
+    attemptLoad();
+
+    // Return cleanup function
+    return cleanup;
   }, [router]);
 
   if (loading) {

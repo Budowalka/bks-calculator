@@ -134,7 +134,24 @@ export function FormProvider({ children }: FormProviderProps) {
         
         // Store quote data in localStorage and redirect to thank you page
         localStorage.setItem('bks-quote-data', JSON.stringify(result));
-        router.push('/tack');
+        console.log('Quote data stored in localStorage:', localStorage.getItem('bks-quote-data') ? 'success' : 'failed');
+        
+        // Add delay to ensure localStorage is set before redirect
+        setTimeout(() => {
+          // Double-check localStorage is set before redirecting
+          const storedData = localStorage.getItem('bks-quote-data');
+          if (storedData) {
+            console.log('Redirecting to /tack page... localStorage confirmed');
+            router.push('/tack');
+          } else {
+            console.error('localStorage not set properly, retrying...');
+            localStorage.setItem('bks-quote-data', JSON.stringify(result));
+            setTimeout(() => {
+              console.log('Retrying redirect to /tack page...');
+              router.push('/tack');
+            }, 200);
+          }
+        }, 200);
       } else {
         throw new Error(result.error || 'Ett fel uppstod när offerten skulle skapas');
       }
@@ -144,7 +161,7 @@ export function FormProvider({ children }: FormProviderProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData]);
+  }, [formData, router]);
 
   const value: FormContextType = {
     formData,

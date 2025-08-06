@@ -24,7 +24,34 @@ let cacheTimestamp: number = 0;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 /**
+ * Get hardcoded material data for components that need it
+ * This replaces the expensive dynamic fetching for performance
+ */
+function getHardcodedMaterialData(componentName: string): MaterialUsage[] {
+  const MATERIAL_DATA: Record<string, MaterialUsage[]> = {
+    'Fyllning och justering av stenflis': [{
+      material_name: 'Stenflis 2-5 mm',
+      material_type: 'Stenflis',
+      quantity_per_unit: 0.07
+    }],
+    'Anläggning och justering av bärlager vid trafikyta': [{
+      material_name: 'Bärlager 0-32 mm',
+      material_type: 'Bärlager',
+      quantity_per_unit: 0.48
+    }],
+    'Anläggning och justering av bärlager vid gångar': [{
+      material_name: 'Bärlager 0-16 mm',
+      material_type: 'Bärlager', 
+      quantity_per_unit: 0.08
+    }]
+  };
+
+  return MATERIAL_DATA[componentName] || [];
+}
+
+/**
  * Get material usage information for a pricing component from Offer Components table
+ * DEPRECATED: Replaced with hardcoded data for performance
  */
 async function getMaterialUsageForComponent(componentId: string): Promise<MaterialUsage[]> {
   try {
@@ -85,10 +112,13 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
   
   // Return cached data if still valid
   if (pricingCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    console.log('✓ Using cached pricing components');
     return pricingCache;
   }
 
   try {
+    console.log('Fetching pricing components from Airtable...');
+    const startFetch = Date.now();
     const records = await base(TABLES.PRICING_CATALOG)
       .select({
         filterByFormula: '{Used in Automatic Calculator} = TRUE()',
@@ -104,8 +134,11 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
         ]
       })
       .all();
+    
+    console.log(`✓ Pricing catalog records fetched in ${Date.now() - startFetch}ms (${records.length} records)`);
 
     const components: PricingComponent[] = [];
+    const startProcessing = Date.now();
     
     for (const record of records) {
       const component: PricingComponent = {
@@ -119,18 +152,18 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
         'labor_max': record.get('labor_max') as number,
       };
 
-      // Fetch material usage information for this component
-      try {
-        const materialUsages = await getMaterialUsageForComponent(record.id);
-        if (materialUsages.length > 0) {
-          component.materials_used = materialUsages;
-        }
-      } catch (error) {
-        console.warn(`Failed to fetch materials for component ${component['Component Name']}:`, error);
+      // Add hardcoded material data for components that need it
+      const materialData = getHardcodedMaterialData(component['Component Name']);
+      if (materialData.length > 0) {
+        component.materials_used = materialData;
+        console.log(`✓ Added hardcoded materials for "${component['Component Name']}" (${materialData.length} materials)`);
       }
 
       components.push(component);
     }
+
+    console.log(`✓ Components processed in ${Date.now() - startProcessing}ms`);
+    console.log(`✓ Total getPricingComponents time: ${Date.now() - startFetch}ms`);
 
     // Update cache
     pricingCache = components;
@@ -423,10 +456,30 @@ export async function uploadPDFToAirtableEstimate(
     
     // Update PDF created date
     console.log('Updating pdf_created_date field...');
-    await base(TABLES.ESTIMATES).update(estimateId, {
-      'pdf_created_date': new Date().toISOString()
+    console.log('Update request details:', {
+      table: TABLES.ESTIMATES,
+      estimateId,
+      baseId: process.env.AIRTABLE_BASE_ID,
+      timestamp: new Date().toISOString()
     });
-    console.log('PDF created date updated successfully');
+    
+    try {
+      const updateResult = await base(TABLES.ESTIMATES).update(estimateId, {
+        'pdf_created_date': new Date().toISOString()
+      });
+      console.log('PDF created date updated successfully:', {
+        recordId: updateResult.id,
+        success: true
+      });
+    } catch (updateError) {
+      console.error('PDF created date update failed:', {
+        error: updateError,
+        message: updateError instanceof Error ? updateError.message : 'Unknown error',
+        estimateId,
+        table: TABLES.ESTIMATES
+      });
+      // Don't throw here, continue with PDF upload
+    }
 
     // Prepare direct upload data
     const uploadData = {
@@ -439,7 +492,15 @@ export async function uploadPDFToAirtableEstimate(
     const uploadUrl = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${estimateId}/fldj1yYgAFldG0VmQ/uploadAttachment`;
     
     console.log('Uploading PDF directly to Airtable...');
-    console.log('Making upload request to:', uploadUrl);
+    console.log('Upload request details:', {
+      url: uploadUrl,
+      method: 'POST',
+      estimateId,
+      filename,
+      bufferSize: pdfBuffer.length,
+      hasApiKey: !!process.env.AIRTABLE_API_KEY
+    });
+    
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
@@ -449,7 +510,13 @@ export async function uploadPDFToAirtableEstimate(
       body: JSON.stringify(uploadData)
     });
 
-    console.log('Upload response status:', response.status, response.statusText);
+    console.log('Upload response details:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      url: response.url,
+      redirected: response.redirected
+    });
     
     if (!response.ok) {
       const errorText = await response.text();

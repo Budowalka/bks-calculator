@@ -47,44 +47,73 @@ export async function POST(request: NextRequest) {
     };
 
     // Get pricing components from Airtable
+    console.log('=== Starting Airtable Operations ===');
+    const startPricing = Date.now();
     const pricingComponents = await getPricingComponents();
+    console.log(`✓ Pricing components fetched in ${Date.now() - startPricing}ms`);
     
     // Initialize calculator and generate quote
+    const startCalc = Date.now();
     const calculator = new BKSCalculator(pricingComponents);
     const quote = calculator.calculateQuote(formData);
+    console.log(`✓ Quote calculated in ${Date.now() - startCalc}ms`);
 
     // Create lead record in Airtable
+    const startLead = Date.now();
     const leadId = await createLead(formData, customerInfo);
+    console.log(`✓ Lead created in ${Date.now() - startLead}ms (ID: ${leadId})`);
     
     // Create estimate record in Airtable
+    const startEstimate = Date.now();
     const estimateId = await createEstimate(leadId, quote, formData);
+    console.log(`✓ Estimate created in ${Date.now() - startEstimate}ms (ID: ${estimateId})`);
     
     // Create estimate items in Airtable
+    const startItems = Date.now();
     await createEstimateItems(estimateId, quote, pricingComponents);
+    console.log(`✓ Estimate items created in ${Date.now() - startItems}ms (${quote.items.length} items)`);
+    
+    const totalAirtableTime = Date.now() - startPricing;
+    console.log(`=== Total Airtable Operations: ${totalAirtableTime}ms ===`);
 
     // Automated workflow: Both PDF and Email in background for fast user response
     console.log('Starting background workflows for estimate:', estimateId);
     
-    // PDF Generation - Fire and forget
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        estimateId: estimateId,
-        returnPdf: false
-      })
-    }).then(async (pdfResponse) => {
-      if (pdfResponse.ok) {
-        console.log('Preview PDF generated successfully in background');
-      } else {
-        const pdfError = await pdfResponse.text();
-        console.error('Failed to generate preview PDF:', pdfError);
-      }
-    }).catch((pdfError) => {
-      console.error('Error in background PDF generation:', pdfError);
-    });
+    // PDF Generation - Completely isolated from user experience
+    setTimeout(() => {
+      console.log('Starting isolated PDF generation workflow...');
+      
+      fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          estimateId: estimateId,
+          returnPdf: false
+        })
+      }).then(async (pdfResponse) => {
+        try {
+          console.log('PDF generation response received:', {
+            status: pdfResponse.status,
+            statusText: pdfResponse.statusText,
+            ok: pdfResponse.ok
+          });
+          
+          if (pdfResponse.ok) {
+            console.log('Preview PDF generated successfully in background');
+          } else {
+            const pdfError = await pdfResponse.text();
+            console.error('Failed to generate preview PDF (isolated, non-blocking):', pdfError);
+          }
+        } catch (responseError) {
+          console.error('Error processing PDF response (isolated, non-blocking):', responseError);
+        }
+      }).catch((pdfError) => {
+        console.error('Error in background PDF generation (isolated, non-blocking):', pdfError);
+        // Ensure PDF errors are completely isolated from user experience
+      });
+    }, 1000); // Delay PDF generation to ensure user has navigated to thank you page first
 
     // Email Sending - Fire and forget
     fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {

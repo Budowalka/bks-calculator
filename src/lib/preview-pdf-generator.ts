@@ -409,12 +409,34 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
           '--hide-scrollbars',
           '--disable-web-security',
           '--disable-features=VizDisplayCompositor',
+          // Enhanced isolation flags
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--disable-extensions',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-background-networking',
+          '--remote-debugging-port=0', // Disable remote debugging
+          '--user-data-dir=/tmp/chromium-user-data-' + Date.now(), // Unique user data dir
         ],
         executablePath: await chromium.executablePath(),
         headless: true,
       });
     } else {
-      // Local development
+      // Local development - Enhanced isolation
+      const uniqueUserDataDir = `/tmp/puppeteer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log('Using isolated browser with user data dir:', uniqueUserDataDir);
+      
       browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -424,16 +446,58 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
+          '--disable-gpu',
+          // Enhanced isolation flags for development
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--disable-extensions',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-background-networking',
+          '--remote-debugging-port=0', // Disable remote debugging
+          '--disable-web-security', // Prevent CORS issues but maintain isolation
+          '--disable-features=VizDisplayCompositor',
+          `--user-data-dir=${uniqueUserDataDir}`, // Unique isolated user data directory
+          '--incognito', // Run in incognito mode for better isolation
         ]
       });
     }
 
     const page = await browser.newPage();
 
+    // Enhanced page isolation
+    console.log('Setting up isolated page context...');
+    
     // Set longer timeout for image loading
     page.setDefaultTimeout(30000);
     page.setDefaultNavigationTimeout(30000);
+    
+    // Clear any existing storage/cache to ensure isolation
+    await page.evaluateOnNewDocument(() => {
+      // Clear all storage to prevent interference
+      if (typeof localStorage !== 'undefined') {
+        localStorage.clear();
+      }
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
+    });
+    
+    // Block navigation attempts that might interfere with user session
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      const url = request.url();
+      // Only allow resource loading, block any navigation attempts
+      if (request.resourceType() === 'document' && !url.startsWith('data:')) {
+        console.log('Blocking navigation request in PDF generation:', url);
+        request.abort();
+      } else {
+        request.continue();
+      }
+    });
 
     // Generate HTML content
     console.log('Generating preview HTML content...');
@@ -485,9 +549,22 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
   } finally {
     if (browser) {
       try {
+        console.log('Cleaning up isolated browser instance...');
+        // Force close all pages first
+        const pages = await browser.pages();
+        await Promise.all(pages.map(page => page.close().catch(() => {})));
+        
+        // Close browser
         await browser.close();
+        console.log('Browser instance closed successfully');
       } catch (closeError) {
         console.error('Error closing browser:', closeError);
+        // Force kill browser process if normal close fails
+        try {
+          await browser.process()?.kill('SIGKILL');
+        } catch (killError) {
+          console.error('Error force killing browser:', killError);
+        }
       }
     }
   }
