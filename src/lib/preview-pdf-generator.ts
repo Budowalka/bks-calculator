@@ -401,36 +401,38 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
     });
     
     if (isProduction) {
-      // Use @sparticuz/chromium for Vercel deployment
-      console.log('Using @sparticuz/chromium for production');
+      // Use @sparticuz/chromium for Vercel deployment - optimized for serverless
+      console.log('Using @sparticuz/chromium for production (serverless optimized)');
       browser = await puppeteer.launch({
         args: [
           ...chromium.args,
-          '--hide-scrollbars',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          // Enhanced isolation flags
+          // Essential serverless flags
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
+          '--disable-gpu',
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu',
+          '--single-process', // Important for serverless
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
+          '--hide-scrollbars',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
           '--disable-features=TranslateUI',
           '--disable-ipc-flooding-protection',
           '--disable-extensions',
           '--disable-default-apps',
           '--disable-sync',
           '--disable-background-networking',
-          '--remote-debugging-port=0', // Disable remote debugging
-          '--user-data-dir=/tmp/chromium-user-data-' + Date.now(), // Unique user data dir
+          '--user-data-dir=/tmp/chromium-user-data-' + Date.now(),
         ],
+        defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
-        headless: true,
+        headless: chromium.headless,
+        ignoreHTTPSErrors: true,
       });
     } else {
       // Local development - Enhanced isolation
@@ -471,9 +473,10 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
     // Enhanced page isolation
     console.log('Setting up isolated page context...');
     
-    // Set longer timeout for image loading
-    page.setDefaultTimeout(30000);
-    page.setDefaultNavigationTimeout(30000);
+    // Set timeouts optimized for serverless environment
+    const timeout = isProduction ? 15000 : 30000; // Shorter timeout for production
+    page.setDefaultTimeout(timeout);
+    page.setDefaultNavigationTimeout(timeout);
     
     // Clear any existing storage/cache to ensure isolation
     await page.evaluateOnNewDocument(() => {
@@ -504,14 +507,18 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
     const htmlContent = generatePreviewHTMLContent(estimate);
 
     console.log('Setting page content...');
-    // Set page content and wait for all resources to load
+    // Set page content with serverless-optimized loading
+    const contentTimeout = isProduction ? 10000 : 30000;
+    const waitCondition = isProduction ? 'domcontentloaded' : 'networkidle0';
+    
     await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0',
-      timeout: 30000
+      waitUntil: waitCondition,
+      timeout: contentTimeout
     });
 
-    // Wait a bit more for images to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Reduced wait time for serverless
+    const imageWaitTime = isProduction ? 1000 : 2000;
+    await new Promise(resolve => setTimeout(resolve, imageWaitTime));
 
     console.log('Page content set, generating preview PDF...');
 
