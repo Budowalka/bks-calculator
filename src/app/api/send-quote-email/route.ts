@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
     
     const { searchParams } = new URL(request.url);
     const estimateId = searchParams.get('estimateId');
-    const skipPdf = searchParams.get('skipPdf') === 'true';
+    // const skipPdf = searchParams.get('skipPdf') === 'true'; // Reserved for future use
 
     if (!estimateId) {
       return NextResponse.json(

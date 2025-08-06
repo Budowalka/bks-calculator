@@ -79,36 +79,45 @@ export async function POST(request: NextRequest) {
     // Automated workflow: Both PDF and Email in background for fast user response
     console.log('Starting background workflows for estimate:', estimateId);
     
-    // PDF Generation - Fire and forget (no delay for serverless compatibility)
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        estimateId: estimateId,
-        returnPdf: false
-      })
-    }).then(async (pdfResponse) => {
-      try {
-        console.log('PDF generation response received:', {
-          status: pdfResponse.status,
-          statusText: pdfResponse.statusText,
-          ok: pdfResponse.ok
-        });
-        
-        if (pdfResponse.ok) {
-          console.log('Preview PDF generated successfully in background');
-        } else {
-          const pdfError = await pdfResponse.text();
-          console.error('Failed to generate preview PDF:', pdfError);
+    // Environment-aware PDF generation
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const pdfDelay = isDevelopment ? 2000 : 0; // Delay in development to avoid interference
+    
+    // PDF Generation - Fire and forget with environment-specific handling
+    setTimeout(() => {
+      console.log(`Starting PDF generation (${isDevelopment ? 'development' : 'production'} mode)...`);
+      
+      fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          estimateId: estimateId,
+          returnPdf: false
+        })
+      }).then(async (pdfResponse) => {
+        try {
+          console.log('PDF generation response received:', {
+            status: pdfResponse.status,
+            statusText: pdfResponse.statusText,
+            ok: pdfResponse.ok,
+            environment: isDevelopment ? 'development' : 'production'
+          });
+          
+          if (pdfResponse.ok) {
+            console.log('Preview PDF generated successfully in background');
+          } else {
+            const pdfError = await pdfResponse.text();
+            console.error('Failed to generate preview PDF:', pdfError);
+          }
+        } catch (responseError) {
+          console.error('Error processing PDF response:', responseError);
         }
-      } catch (responseError) {
-        console.error('Error processing PDF response:', responseError);
-      }
-    }).catch((pdfError) => {
-      console.error('Error in background PDF generation:', pdfError);
-    });
+      }).catch((pdfError) => {
+        console.error('Error in background PDF generation:', pdfError);
+      });
+    }, pdfDelay);
 
     // Email Sending - Fire and forget
     fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {

@@ -429,10 +429,8 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
           '--disable-background-networking',
           '--user-data-dir=/tmp/chromium-user-data-' + Date.now(),
         ],
-        defaultViewport: chromium.defaultViewport,
         executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-        ignoreHTTPSErrors: true,
+        headless: true,
       });
     } else {
       // Local development - Enhanced isolation

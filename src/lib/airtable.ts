@@ -53,6 +53,7 @@ function getHardcodedMaterialData(componentName: string): MaterialUsage[] {
  * Get material usage information for a pricing component from Offer Components table
  * DEPRECATED: Replaced with hardcoded data for performance
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getMaterialUsageForComponent(componentId: string): Promise<MaterialUsage[]> {
   try {
     // First get the pricing component record to access the Components field
