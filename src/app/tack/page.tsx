@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { QuoteDisplay } from '@/components/quote/QuoteDisplay';
+import { ExitIntentModal } from '@/components/quote/ExitIntentModal';
 import { QuoteResponse } from '@/lib/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -10,30 +11,24 @@ import { AlertTriangle } from 'lucide-react';
 export default function ThankYouPage() {
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showExitModal, setShowExitModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Add navigation guard to prevent unwanted back/forward navigation
+    // Exit intent handler - show custom CTA modal instead of browser dialog
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      console.log('User attempting to leave thank you page');
+      console.log('User attempting to leave thank you page - showing CTA modal');
       e.preventDefault();
-      return ''; // Show browser's default confirmation dialog
+      setShowExitModal(true);
+      return ''; // Required for some browsers
     };
 
-    // Add popstate handler to track navigation
-    const handlePopState = (e: PopStateEvent) => {
-      console.log('Browser navigation detected on thank you page:', e);
-      // Allow navigation but log it
-    };
-
-    // Add these listeners
+    // Add exit intent listener
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
 
     // Cleanup
     const cleanup = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
     };
 
     // Main quote loading logic
@@ -105,6 +100,18 @@ export default function ThankYouPage() {
     return cleanup;
   }, [router]);
 
+  // Modal handlers
+  const handleCloseModal = () => {
+    setShowExitModal(false);
+  };
+
+  const handleConfirmExit = () => {
+    setShowExitModal(false);
+    // Allow the user to leave by removing the beforeunload listener temporarily
+    window.removeEventListener('beforeunload', () => {});
+    window.close(); // Try to close the window/tab
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -137,6 +144,14 @@ export default function ThankYouPage() {
           <QuoteDisplay quoteData={quoteData} />
         </div>
       </div>
+      
+      {/* Exit Intent Modal */}
+      <ExitIntentModal
+        isOpen={showExitModal}
+        onClose={handleCloseModal}
+        onConfirmExit={handleConfirmExit}
+        customerInfo={quoteData?.customerInfo}
+      />
     </div>
   );
 }
