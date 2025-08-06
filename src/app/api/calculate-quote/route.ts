@@ -62,62 +62,50 @@ export async function POST(request: NextRequest) {
     // Create estimate items in Airtable
     await createEstimateItems(estimateId, quote, pricingComponents);
 
-    // Automated workflow: PDF async, Email sync
-    try {
-      console.log('Starting automated workflow for estimate:', estimateId);
-      
-      // PDF Generation - Asynchronous (works fine in background)
-      const pdfWorkflow = (async () => {
-        try {
-          console.log('Starting background PDF generation for estimate:', estimateId);
-          const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              estimateId: estimateId,
-              returnPdf: false
-            })
-          });
+    // Automated workflow: Both PDF and Email in background for fast user response
+    console.log('Starting background workflows for estimate:', estimateId);
+    
+    // PDF Generation - Fire and forget
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/generate-preview-pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        estimateId: estimateId,
+        returnPdf: false
+      })
+    }).then(async (pdfResponse) => {
+      if (pdfResponse.ok) {
+        console.log('Preview PDF generated successfully in background');
+      } else {
+        const pdfError = await pdfResponse.text();
+        console.error('Failed to generate preview PDF:', pdfError);
+      }
+    }).catch((pdfError) => {
+      console.error('Error in background PDF generation:', pdfError);
+    });
 
-          if (pdfResponse.ok) {
-            console.log('Preview PDF generated successfully in background');
-          } else {
-            const pdfError = await pdfResponse.text();
-            console.error('Failed to generate preview PDF:', pdfError);
-          }
-        } catch (pdfError) {
-          console.error('Error in background PDF generation:', pdfError);
-        }
-      })();
-
-      // Don't await PDF - let it run in background
-
-      // Email Sending - Synchronous (to ensure delivery)
-      console.log('Sending quote email synchronously...');
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          estimateId: estimateId,
-          generatePdfIfMissing: true // Generate PDF if background PDF isn't ready yet
-        })
-      });
-
+    // Email Sending - Fire and forget
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/send-quote-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        estimateId: estimateId,
+        generatePdfIfMissing: true // Generate PDF if background PDF isn't ready yet
+      })
+    }).then(async (emailResponse) => {
       if (emailResponse.ok) {
-        console.log('Quote email sent successfully');
+        console.log('Quote email sent successfully in background');
       } else {
         const emailError = await emailResponse.text();
-        console.error('Failed to send quote email:', emailError);
+        console.error('Failed to send quote email in background:', emailError);
       }
-
-    } catch (automationError) {
-      console.error('Error in automated workflow:', automationError);
-      // Don't fail the main response if automation fails
-    }
+    }).catch((emailError) => {
+      console.error('Error in background email sending:', emailError);
+    });
 
     // Prepare response
     const response: QuoteResponse = {

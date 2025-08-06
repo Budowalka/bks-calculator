@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import chromium from '@sparticuz/chromium';
-import { EstimateData, EstimateItem, LeadData } from './pdf-generator';
+import { EstimateData, EstimateItem } from './pdf-generator';
 import { generateCalLinkFromLead } from './cal-link-generator';
 
 /**
@@ -383,9 +383,22 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
   let browser;
   
   try {
+    console.log('=== Preview PDF Generation Started ===');
+    console.log('Estimate data:', {
+      id: estimate.id,
+      status: estimate.status,
+      itemsCount: estimate.items?.length || 0,
+      hasLead: !!estimate.lead,
+      leadName: estimate.lead ? `${estimate.lead.first_name} ${estimate.lead.last_name}` : 'N/A'
+    });
+    
     // Configure for Vercel serverless environment
     const isProduction = process.env.NODE_ENV === 'production';
-    console.log('Preview PDF Generation environment:', { isProduction, nodeEnv: process.env.NODE_ENV });
+    console.log('Preview PDF Generation environment:', { 
+      isProduction, 
+      nodeEnv: process.env.NODE_ENV,
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL 
+    });
     
     if (isProduction) {
       // Use @sparticuz/chromium for Vercel deployment
@@ -462,7 +475,8 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
       preferCSSPageSize: false
     });
 
-    console.log('Preview PDF generated successfully');
+    console.log('=== Preview PDF Generated Successfully ===');
+    console.log('PDF buffer size:', pdfBuffer.length, 'bytes');
     return Buffer.from(pdfBuffer);
 
   } catch (error) {

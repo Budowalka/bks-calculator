@@ -28,38 +28,45 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
  */
 async function getMaterialUsageForComponent(componentId: string): Promise<MaterialUsage[]> {
   try {
-    const offerComponents = await base(TABLES.OFFER_COMPONENTS)
-      .select({
-        filterByFormula: `{Offer Component} = "${componentId}"`,
-        fields: ['Resource Name', 'Resource Quantity per Unit']
-      })
-      .all();
+    // First get the pricing component record to access the Components field
+    const pricingComponent = await base(TABLES.PRICING_CATALOG).find(componentId);
+    const componentLinks = pricingComponent.get('Components') as string[] | undefined;
+    
+    if (!componentLinks || componentLinks.length === 0) {
+      return [];
+    }
 
     const materialUsages: MaterialUsage[] = [];
 
-    for (const offerComp of offerComponents) {
-      const resourceIds = offerComp.get('Resource Name') as string[];
-      const quantityPerUnit = offerComp.get('Resource Quantity per Unit') as number;
+    // Get offer components data for each linked component
+    for (const offerComponentId of componentLinks) {
+      try {
+        const offerComponent = await base(TABLES.OFFER_COMPONENTS).find(offerComponentId);
+        const resourceIds = offerComponent.get('Resource Name') as string[];
+        const quantityPerUnit = offerComponent.get('Resource Quantity per Unit') as number;
 
-      if (!resourceIds || !quantityPerUnit) continue;
+        if (!resourceIds || !quantityPerUnit) continue;
 
-      // Get resource information
-      for (const resourceId of resourceIds) {
-        try {
-          const resource = await base(TABLES.RESOURCES).find(resourceId);
-          const itemName = resource.get('Item Name') as string;
-          
-          if (itemName && (itemName.includes('Bärlager') || itemName.includes('Stenflis'))) {
-            const materialType = itemName.includes('Bärlager') ? 'Bärlager' : 'Stenflis';
-            materialUsages.push({
-              material_name: itemName,
-              material_type: materialType as 'Bärlager' | 'Stenflis',
-              quantity_per_unit: quantityPerUnit
-            });
+        // Get resource information
+        for (const resourceId of resourceIds) {
+          try {
+            const resource = await base(TABLES.RESOURCES).find(resourceId);
+            const itemName = resource.get('Item Name') as string;
+            
+            if (itemName && (itemName.includes('Bärlager') || itemName.includes('Stenflis'))) {
+              const materialType = itemName.includes('Bärlager') ? 'Bärlager' : 'Stenflis';
+              materialUsages.push({
+                material_name: itemName,
+                material_type: materialType as 'Bärlager' | 'Stenflis',
+                quantity_per_unit: quantityPerUnit
+              });
+            }
+          } catch (resourceError) {
+            console.warn(`Could not fetch resource ${resourceId}:`, resourceError);
           }
-        } catch (resourceError) {
-          console.warn(`Could not fetch resource ${resourceId}:`, resourceError);
         }
+      } catch (offerComponentError) {
+        console.warn(`Could not fetch offer component ${offerComponentId}:`, offerComponentError);
       }
     }
 
@@ -92,7 +99,8 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
           'Used in Automatic Calculator',
           'Stage',
           'labor_rate',
-          'labor_max'
+          'labor_max',
+          'Components'
         ]
       })
       .all();
@@ -390,11 +398,27 @@ export async function uploadPDFToAirtableEstimate(
   filename: string
 ): Promise<void> {
   try {
-    console.log('Uploading PDF directly to Airtable:', { estimateId, filename, bufferSize: pdfBuffer.length });
+    console.log('=== Starting PDF Upload to Airtable ===');
+    console.log('Upload details:', { 
+      estimateId, 
+      filename, 
+      bufferSize: pdfBuffer.length,
+      sizeKB: Math.round(pdfBuffer.length / 1024),
+      baseId: process.env.AIRTABLE_BASE_ID,
+      hasApiKey: !!process.env.AIRTABLE_API_KEY
+    });
     
     // Check if PDF is too large for direct upload (5MB limit)
     if (pdfBuffer.length > 5 * 1024 * 1024) { // 5MB limit for direct upload
       throw new Error(`PDF too large for direct upload: ${pdfBuffer.length} bytes. Maximum is 5MB.`);
+    }
+    
+    // Validate required environment variables
+    if (!process.env.AIRTABLE_BASE_ID) {
+      throw new Error('AIRTABLE_BASE_ID environment variable is missing');
+    }
+    if (!process.env.AIRTABLE_API_KEY) {
+      throw new Error('AIRTABLE_API_KEY environment variable is missing');
     }
     
     // Update PDF created date
@@ -415,6 +439,7 @@ export async function uploadPDFToAirtableEstimate(
     const uploadUrl = `https://content.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${estimateId}/fldj1yYgAFldG0VmQ/uploadAttachment`;
     
     console.log('Uploading PDF directly to Airtable...');
+    console.log('Making upload request to:', uploadUrl);
     const response = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
@@ -424,16 +449,24 @@ export async function uploadPDFToAirtableEstimate(
       body: JSON.stringify(uploadData)
     });
 
+    console.log('Upload response status:', response.status, response.statusText);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Upload failed - Response:', errorText);
       throw new Error(`Direct upload failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('PDF uploaded successfully via direct upload API');
-    console.log('Upload result:', { attachmentId: result.fields?.pdf_attachment?.[0]?.id, size: result.fields?.pdf_attachment?.[0]?.size });
+    console.log('=== PDF Upload Successful ===');
+    console.log('Upload result:', { 
+      success: true,
+      attachmentId: result.fields?.pdf_attachment?.[0]?.id, 
+      attachmentSize: result.fields?.pdf_attachment?.[0]?.size,
+      attachmentUrl: result.fields?.pdf_attachment?.[0]?.url 
+    });
     
-    console.log(`PDF processing completed for estimate ${estimateId}`);
+    console.log(`=== PDF processing completed for estimate ${estimateId} ===`);
   } catch (error) {
     console.error('Error uploading PDF to Airtable:', error);
     

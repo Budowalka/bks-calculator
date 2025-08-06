@@ -96,8 +96,9 @@ export class BKSCalculator {
     // Decision 4: Grouting
     items.push(...this.getGroutingComponents(formData));
 
-    // Decision 5: Cleanup (always included)
-    items.push(...this.getCleanupComponents(formData));
+    // Decision 5: Cleanup (always included) - pass additional container requirements
+    const additionalContainers = this.calculateAdditionalContainers(formData);
+    items.push(...this.getCleanupComponents(additionalContainers));
 
     return items;
   }
@@ -140,19 +141,7 @@ export class BKSCalculator {
         );
         if (leveling) items.push(leveling);
         
-        // Calculate extra containers beyond the minimum 1 already included in cleanup
-        const levelingVolume = formData.area * 0.1 * 1.3; // 100mm depth * 30% swell factor
-        const levelingContainers = Math.max(1, Math.round(levelingVolume / 8)); // 8m³ per container
-        const extraLevelingContainers = Math.max(0, levelingContainers - 1); // Subtract 1 since minimum is already in cleanup
-        
-        const levelingWasteRemoval = extraLevelingContainers > 0 ? this.createQuoteItem(
-          'Bortforsling av schaktmassor - extra',
-          'Bortforsling',
-          extraLevelingContainers,
-          'st'
-        ) : null;
-        
-        if (levelingWasteRemoval) items.push(levelingWasteRemoval);
+        // Additional waste removal for light leveling is handled in cleanup calculation
         break;
 
       case 'Området har inte förberetts än':
@@ -161,19 +150,8 @@ export class BKSCalculator {
           const excavation = this.createQuoteItem('Schakt 400mm djup', 'Schakt', formData.area, 'm²');
           const baseLayer = this.createQuoteItem('Anläggning och justering av bärlager vid trafikyta', 'Underarbete', formData.area, 'm²');
           const compaction = this.createQuoteItem('Packning av bärlager vid uppfart', 'Underarbete', formData.area, 'm²');
-          // Calculate extra containers beyond the minimum 1 already included in cleanup
-          const excavationVolume = formData.area * 0.4 * 1.3; // 400mm depth * 30% swell factor
-          const totalContainers = Math.max(1, Math.round(excavationVolume / 8)); // 8m³ per container
-          const extraContainers = Math.max(0, totalContainers - 1); // Subtract 1 since minimum is already in cleanup
-          
-          const wasteRemoval = extraContainers > 0 ? this.createQuoteItem(
-            'Bortforsling av schaktmassor - extra', 
-            'Bortforsling',
-            extraContainers,
-            'st'
-          ) : null;
 
-          [excavation, baseLayer, compaction, wasteRemoval]
+          [excavation, baseLayer, compaction]
             .filter(Boolean)
             .forEach(item => items.push(item!));
 
@@ -187,19 +165,8 @@ export class BKSCalculator {
           );
           const baseLayer = this.createQuoteItem('Anläggning och justering av bärlager vid gångar', 'Underarbete', formData.area, 'm²');
           const compaction = this.createQuoteItem('Packning av bärlager vid gångar', 'Underarbete', formData.area, 'm²');
-          // Calculate extra containers beyond the minimum 1 already included in cleanup
-          const excavationVolume = formData.area * 0.1 * 1.3; // 100mm depth * 30% swell factor
-          const totalContainers = Math.max(1, Math.round(excavationVolume / 8)); // 8m³ per container
-          const extraContainers = Math.max(0, totalContainers - 1); // Subtract 1 since minimum is already in cleanup
-          
-          const wasteRemoval = extraContainers > 0 ? this.createQuoteItem(
-            'Bortforsling av schaktmassor - extra',
-            'Bortforsling', 
-            extraContainers,
-            'st'
-          ) : null;
 
-          [vegetation, baseLayer, compaction, wasteRemoval]
+          [vegetation, baseLayer, compaction]
             .filter(Boolean)
             .forEach(item => items.push(item!));
         }
@@ -296,16 +263,38 @@ export class BKSCalculator {
   }
 
   /**
+   * Calculate additional containers needed based on preparation type
+   */
+  private calculateAdditionalContainers(formData: FormData): number {
+    switch (formData.forberedelse) {
+      case 'Området kräver lätt nivellering':
+        const levelingVolume = formData.area * 0.1 * 1.3; // 100mm depth * 30% swell factor
+        return Math.max(1, Math.round(levelingVolume / 8)); // 8m³ per container
+        
+      case 'Området har inte förberetts än':
+        if (formData.anvandning === 'Trafikyta') {
+          const excavationVolume = formData.area * 0.4 * 1.3; // 400mm depth * 30% swell factor
+          return Math.max(1, Math.round(excavationVolume / 8)); // 8m³ per container
+        } else if (formData.anvandning === 'Gångyta') {
+          const excavationVolume = formData.area * 0.1 * 1.3; // 100mm depth * 30% swell factor
+          return Math.max(1, Math.round(excavationVolume / 8)); // 8m³ per container
+        }
+        break;
+    }
+    return 1; // Minimum 1 container
+  }
+
+  /**
    * Get cleanup components (always included)
    */
-  private getCleanupComponents(_formData: FormData): QuoteItem[] {
+  private getCleanupComponents(totalContainers: number = 1): QuoteItem[] {
     const items: QuoteItem[] = [];
 
-    // Always include minimum 1 container of waste removal
+    // Include calculated number of waste removal containers
     const wasteRemoval = this.createQuoteItem(
       'Bortforsling av schaktmassor',
       'Bortforsling',
-      1,
+      totalContainers,
       'st'
     );
     if (wasteRemoval) items.push(wasteRemoval);
