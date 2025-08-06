@@ -315,12 +315,13 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
           <div class="disclaimer-title">⚠️ Viktigt att veta - Ingår INTE i priset:</div>
           <div class="disclaimer-content">
             <ul>
+              <li><strong>Rivning av befintligt material (asfalt, betong, gamla stenar mm.)</strong></li>
               <li><strong>Betongplattor och marksten</strong></li>
               <li><strong>Små- och storgatsten</strong></li>
               <li><strong>Granithällar och skifferplattor</strong></li>
               <li><strong>Eventuellt extra grävarbete vid djupare markförberedelse</strong></li>
             </ul>
-            <p><strong>Obs:</strong> Om du valde asfalt som slutbeläggning ingår detta i priset. Övriga stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök baserat på typ, färg och tillverkare.</p>
+            <p><strong>Obs:</strong> Rivningsarbete kräver platsbesiktning för säker bedömning av omfattning och eventuella tillståndskrav. Om du valde asfalt som slutbeläggning ingår detta i priset. Övriga stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök baserat på typ, färg och tillverkare.</p>
           </div>
         </div>
 

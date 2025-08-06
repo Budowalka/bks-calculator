@@ -55,12 +55,13 @@ export function QuoteDisplay({ quoteData }: QuoteDisplayProps) {
           <AlertDescription>
             <div className="font-bold mb-2 text-red-800 text-base">❌ Ingår inte i priset:</div>
             <ul className="text-sm space-y-1 text-red-700 font-medium">
+              <li>• Rivning av befintligt material (asfalt, betong, gamla stenar mm.)</li>
               <li>• Betongplattor och marksten</li>
               <li>• Små- och storgatsten</li>
               <li>• Granithällar och skifferplattor</li>
             </ul>
             <p className="text-xs text-red-600 mt-2 font-medium bg-red-100 p-2 rounded">
-              💡 Dessa material väljs och prissätts vid vårt kostnadsfria hembesök. Pris beror på typ, färg och tillverkare.
+              💡 Rivningsarbete kräver platsbesiktning för säker bedömning av omfattning och eventuella tillståndskrav. Stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök baserat på typ, färg och tillverkare.
             </p>
           </AlertDescription>
         </Alert>
