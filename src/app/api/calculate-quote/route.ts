@@ -78,187 +78,118 @@ export async function POST(request: NextRequest) {
     const totalAirtableTime = Date.now() - startPricing;
     console.log(`=== Total Airtable Operations: ${totalAirtableTime}ms ===`);
 
-    // Serverless-optimized background workflows: Direct function calls instead of HTTP fetch
-    console.log('Starting optimized background workflows for estimate:', estimateId);
+    // Synchronous PDF and Email Generation - Complete before responding to user
+    console.log('Starting synchronous PDF and email generation for estimate:', estimateId);
     
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const pdfDelay = isDevelopment ? 2000 : 0; // Delay in development to avoid interference
-    
     console.log('Environment details:', {
       isDevelopment,
       nodeEnv: process.env.NODE_ENV,
-      pdfDelay,
       estimateId
     });
     
-    // PDF Generation - Direct function call approach for better serverless reliability
-    const pdfGenerationPromise = new Promise<void>((resolve, reject) => {
-      setTimeout(async () => {
-        try {
-          console.log(`Starting direct PDF generation (${isDevelopment ? 'development' : 'production'} mode)...`);
-          console.log('PDF generation details:', {
-            estimateId,
-            timestamp: new Date().toISOString()
-          });
-          
-          // Fetch estimate data directly
-          const estimate = await getEstimateForPDF(estimateId);
-          
-          if (!estimate) {
-            throw new Error('Estimate not found for PDF generation');
-          }
-          
-          if (estimate.status !== 'Automat') {
-            throw new Error(`Preview PDF can only be generated for automatic estimates (status: Automat), got: ${estimate.status}`);
-          }
-          
-          // Generate PDF directly
-          const pdfBuffer = await generatePreviewPDF(estimate);
-          const filename = generatePreviewPDFFilename(estimate);
-          
-          console.log('Preview PDF generated successfully, size:', pdfBuffer.length);
-          
-          // Upload to Airtable
-          await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
-          console.log('Preview PDF uploaded to Airtable successfully');
-          
-          resolve();
-        } catch (error) {
-          console.error('Error in direct PDF generation:', {
-            error: error,
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-            estimateId,
-            timestamp: new Date().toISOString()
-          });
-          reject(error);
+    try {
+      // Validate email configuration first
+      console.log('Validating email configuration...');
+      const emailValidation = validateEmailConfig();
+      if (!emailValidation.valid) {
+        throw new Error(`Email configuration is invalid: ${emailValidation.errors.join(', ')}`);
+      }
+      
+      // Fetch estimate data for both PDF and email
+      console.log('Fetching estimate data...');
+      const estimate = await getEstimateForPDF(estimateId);
+      
+      if (!estimate) {
+        throw new Error('Estimate not found for PDF generation and email sending');
+      }
+      
+      if (estimate.status !== 'Automat') {
+        throw new Error(`PDF and email can only be generated for automatic estimates (status: Automat), got: ${estimate.status}`);
+      }
+      
+      if (!estimate.lead?.email) {
+        throw new Error('No customer email address found in estimate data');
+      }
+      
+      console.log('Starting PDF generation...');
+      
+      // Add delay in development to avoid interference
+      if (isDevelopment) {
+        console.log('Development mode: waiting 2 seconds before PDF generation...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      
+      // Generate PDF
+      const pdfBuffer = await generatePreviewPDF(estimate);
+      const filename = generatePreviewPDFFilename(estimate);
+      
+      console.log('Preview PDF generated successfully, size:', pdfBuffer.length);
+      
+      // Upload PDF to Airtable
+      console.log('Uploading PDF to Airtable...');
+      await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+      console.log('Preview PDF uploaded to Airtable successfully');
+      
+      // Prepare estimate data for email service
+      console.log('Preparing email data...');
+      const emailEstimateData = {
+        estimate_nr: estimate.estimate_nr,
+        total_amount_vat: estimate.total_amount_vat,
+        estimated_work_days: estimate.estimated_work_days,
+        lead: {
+          first_name: estimate.lead.first_name,
+          last_name: estimate.lead.last_name,
+          email: estimate.lead.email,
+          phone: estimate.lead.phone,
+          'Lead First Name': estimate.lead.first_name,
+          'Lead Last Name': estimate.lead.last_name,
+          'Lead Email': estimate.lead.email,
+          'Lead Phone Number': estimate.lead.phone
         }
-      }, pdfDelay);
-    });
-
-    // Email Sending - Direct function call approach for better serverless reliability  
-    const emailGenerationPromise = new Promise<void>((resolve, reject) => {
-      // Start immediately (no delay for email)
-      (async () => {
-        try {
-          console.log('Starting direct email sending...');
-          console.log('Email sending details:', {
-            estimateId,
-            timestamp: new Date().toISOString()
-          });
-          
-          // Validate email configuration first
-          const emailValidation = validateEmailConfig();
-          if (!emailValidation.valid) {
-            throw new Error(`Email configuration is invalid: ${emailValidation.errors.join(', ')}`);
-          }
-          
-          // Fetch estimate data directly  
-          const estimate = await getEstimateForPDF(estimateId);
-          
-          if (!estimate) {
-            throw new Error('Estimate not found for email sending');
-          }
-          
-          if (estimate.status !== 'Automat') {
-            throw new Error(`Quote email can only be sent for automatic estimates (status: Automat), got: ${estimate.status}`);
-          }
-          
-          if (!estimate.lead?.email) {
-            throw new Error('No customer email address found in estimate data');
-          }
-          
-          // Generate PDF for email attachment (if needed)
-          let pdfBuffer: Buffer | undefined;
-          let pdfFilename: string | undefined;
-          
-          try {
-            console.log('Generating preview PDF for email attachment...');
-            pdfBuffer = await generatePreviewPDF(estimate);
-            pdfFilename = generatePreviewPDFFilename(estimate);
-            
-            if (!pdfBuffer || pdfBuffer.length === 0) {
-              console.error('PDF generation returned empty buffer');
-              pdfBuffer = undefined;
-              pdfFilename = undefined;
-            } else {
-              console.log('Preview PDF generated successfully for email, size:', pdfBuffer.length, 'bytes');
-            }
-          } catch (pdfError) {
-            console.error('Error generating PDF for email:', pdfError);
-            pdfBuffer = undefined;
-            pdfFilename = undefined;
-            console.log('Continuing to send email without PDF attachment');
-          }
-          
-          // Prepare estimate data for email service
-          const emailEstimateData = {
-            estimate_nr: estimate.estimate_nr,
-            total_amount_vat: estimate.total_amount_vat,
-            estimated_work_days: estimate.estimated_work_days,
-            lead: {
-              first_name: estimate.lead.first_name,
-              last_name: estimate.lead.last_name,
-              email: estimate.lead.email,
-              phone: estimate.lead.phone,
-              'Lead First Name': estimate.lead.first_name,
-              'Lead Last Name': estimate.lead.last_name,
-              'Lead Email': estimate.lead.email,
-              'Lead Phone Number': estimate.lead.phone
-            }
-          };
-          
-          // Send email directly
-          console.log('Sending quote email to:', estimate.lead.email);
-          const emailResult = await sendQuoteEmail(emailEstimateData, pdfBuffer, pdfFilename);
-          
-          if (!emailResult.success) {
-            throw new Error(`Failed to send quote email: ${emailResult.error}`);
-          }
-          
-          console.log('Quote email sent successfully');
-          
-          // Update sent messages tracking in Lead_Data table
-          if (estimate.lead?.id) {
-            const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
-            await updateLeadSentMessages(
-              estimate.lead.id,
-              emailSubject,
-              estimate.lead.email,
-              emailResult.messageId,
-              !!pdfBuffer
-            );
-            console.log('Sent messages tracking updated for lead:', estimate.lead.id);
-          } else {
-            console.warn('No lead ID available for sent messages tracking');
-          }
-          
-          resolve();
-          
-        } catch (error) {
-          console.error('Error in direct email sending:', {
-            error: error,
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-            estimateId,
-            timestamp: new Date().toISOString()
-          });
-          reject(error);
-        }
-      })();
-    });
-
-    // Start both background processes but don't wait for them
-    // This ensures the main response is sent immediately while background tasks continue
-    pdfGenerationPromise.catch((error) => {
-      console.error('PDF generation background process failed:', error.message);
-    });
-    
-    emailGenerationPromise.catch((error) => {
-      console.error('Email sending background process failed:', error.message);
-    });
-    
-    console.log('Optimized background workflows initiated, proceeding with response');
+      };
+      
+      // Send email with PDF attachment
+      console.log('Sending quote email to:', estimate.lead.email);
+      const emailResult = await sendQuoteEmail(emailEstimateData, pdfBuffer, filename);
+      
+      if (!emailResult.success) {
+        throw new Error(`Failed to send quote email: ${emailResult.error}`);
+      }
+      
+      console.log('Quote email sent successfully');
+      
+      // Update sent messages tracking in Lead_Data table
+      console.log('Updating sent messages tracking...');
+      if (estimate.lead?.id) {
+        const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
+        await updateLeadSentMessages(
+          estimate.lead.id,
+          emailSubject,
+          estimate.lead.email,
+          emailResult.messageId,
+          !!pdfBuffer
+        );
+        console.log('Sent messages tracking updated for lead:', estimate.lead.id);
+      } else {
+        console.warn('No lead ID available for sent messages tracking');
+      }
+      
+      console.log('✓ PDF generation and email sending completed successfully');
+      
+    } catch (error) {
+      console.error('Error in synchronous PDF and email processing:', {
+        error: error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        estimateId,
+        timestamp: new Date().toISOString()
+      });
+      
+      // For now, we'll log the error but continue with the response
+      // In the future, you might want to return an error response here
+      console.error('PDF/Email processing failed, but continuing with quote response');
+    }
 
     // Prepare response
     const response: QuoteResponse = {

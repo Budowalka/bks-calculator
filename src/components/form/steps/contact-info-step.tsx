@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FormData } from '@/lib/types';
+import { QuoteProcessingLoader } from '@/components/ui/quote-processing-loader';
 
 export function ContactInfoStep() {
   const { 
@@ -15,6 +16,7 @@ export function ContactInfoStep() {
     markStepCompleted,
     submitForm,
     isSubmitting,
+    isProcessingQuote,
     submissionError,
     submissionSuccess
   } = useFormContext();
@@ -58,7 +60,19 @@ export function ContactInfoStep() {
     }
   };
 
+  const handleProcessingComplete = () => {
+    // This callback is called when the processing loader completes its animation
+    // The actual redirection is handled by the form context
+    console.log('Processing loader animation completed');
+  };
+
   return (
+    <>
+      {/* Processing Loader Overlay */}
+      <QuoteProcessingLoader 
+        isVisible={isProcessingQuote} 
+        onComplete={handleProcessingComplete}
+      />
     <FormWrapper
       title="Dina kontaktuppgifter"
       description="Ange dina uppgifter för att få din personliga offert"
@@ -187,5 +201,6 @@ export function ContactInfoStep() {
         )}
       </div>
     </FormWrapper>
+    </>
   );
 }

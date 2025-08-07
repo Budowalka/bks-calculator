@@ -32,9 +32,10 @@ interface FormContextType {
   completedSteps: Set<FormStep>;
   markStepCompleted: (step: FormStep) => void;
   
-  // Form submission
+  // Form submission with enhanced processing
   submitForm: () => Promise<void>;
   isSubmitting: boolean;
+  isProcessingQuote: boolean;
   submissionError: string | null;
   submissionSuccess: boolean;
   quoteData: QuoteResponse | null;
@@ -64,6 +65,7 @@ export function FormProvider({ children }: FormProviderProps) {
   
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessingQuote, setIsProcessingQuote] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
@@ -109,9 +111,12 @@ export function FormProvider({ children }: FormProviderProps) {
 
   const submitForm = useCallback(async () => {
     setIsSubmitting(true);
+    setIsProcessingQuote(true);
     setSubmissionError(null);
     
     try {
+      console.log('Starting quote submission...');
+      
       const response = await fetch('/api/calculate-quote', {
         method: 'POST',
         headers: {
@@ -128,15 +133,15 @@ export function FormProvider({ children }: FormProviderProps) {
       const result = await response.json();
       
       if (result.success) {
+        console.log('Quote processing completed successfully:', result);
         setSubmissionSuccess(true);
         setQuoteData(result);
-        console.log('Quote submitted successfully:', result);
         
-        // Store quote data in localStorage and redirect to thank you page
+        // Store quote data in localStorage for thank you page
         localStorage.setItem('bks-quote-data', JSON.stringify(result));
         console.log('Quote data stored in localStorage:', localStorage.getItem('bks-quote-data') ? 'success' : 'failed');
         
-        // Add delay to ensure localStorage is set before redirect
+        // Small delay to allow processing loader to complete its animation
         setTimeout(() => {
           // Double-check localStorage is set before redirecting
           const storedData = localStorage.getItem('bks-quote-data');
@@ -151,13 +156,14 @@ export function FormProvider({ children }: FormProviderProps) {
               router.push('/tack');
             }, 200);
           }
-        }, 200);
+        }, 500);
       } else {
         throw new Error(result.error || 'Ett fel uppstod när offerten skulle skapas');
       }
     } catch (error) {
       console.error('Form submission error:', error);
       setSubmissionError(error instanceof Error ? error.message : 'Ett okänt fel uppstod');
+      setIsProcessingQuote(false); // Stop processing on error
     } finally {
       setIsSubmitting(false);
     }
@@ -181,6 +187,7 @@ export function FormProvider({ children }: FormProviderProps) {
     markStepCompleted,
     submitForm,
     isSubmitting,
+    isProcessingQuote,
     submissionError,
     submissionSuccess,
     quoteData
