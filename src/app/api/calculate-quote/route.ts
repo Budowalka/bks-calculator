@@ -4,6 +4,7 @@ import { createLead, createEstimate, createEstimateItems, getPricingComponents, 
 import { FormData, CustomerInfo, QuoteResponse } from '@/lib/types';
 import { generatePreviewPDF, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
 import { sendQuoteEmail, validateEmailConfig } from '@/lib/email-service';
+import { sendQuoteConfirmationSMS } from '@/lib/sms';
 
 export async function POST(request: NextRequest) {
   try {
@@ -176,7 +177,26 @@ export async function POST(request: NextRequest) {
       }
       
       console.log('✓ PDF generation and email sending completed successfully');
-      
+
+      // Send SMS confirmation (fire-and-forget, non-blocking)
+      if (estimate.lead?.phone) {
+        sendQuoteConfirmationSMS({
+          customerPhone: estimate.lead.phone,
+          customerEmail: estimate.lead.email,
+          estimateId,
+        }).then(smsResult => {
+          if (smsResult.success) {
+            console.log(`✓ SMS sent successfully: ${smsResult.smsId}, cost: ${smsResult.cost} SEK`);
+          } else {
+            console.warn(`SMS sending skipped or failed: ${smsResult.error}`);
+          }
+        }).catch(smsError => {
+          console.error('SMS sending error:', smsError);
+        });
+      } else {
+        console.log('SMS skipped: no phone number available');
+      }
+
     } catch (error) {
       console.error('Error in synchronous PDF and email processing:', {
         error: error,
