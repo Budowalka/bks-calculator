@@ -63,7 +63,18 @@ export async function sendSMS(params: SendSMSParams): Promise<SMSResponse> {
   const password = process.env.ELKS_API_PASSWORD;
 
   if (!username || !password) {
-    throw new Error('46elks API credentials not configured. Set ELKS_API_USERNAME and ELKS_API_PASSWORD environment variables.');
+    console.log('[SMS] Skipped: 46elks credentials not configured');
+    return {
+      id: 'skipped',
+      from: from,
+      to,
+      message,
+      direction: 'outgoing' as const,
+      status: 'created' as const,
+      created: new Date().toISOString(),
+      cost: 0,
+      parts: 0,
+    };
   }
 
   const credentials = Buffer.from(`${username}:${password}`).toString('base64');
