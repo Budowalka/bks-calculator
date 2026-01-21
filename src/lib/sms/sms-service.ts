@@ -31,7 +31,7 @@ export interface SMSResult {
  * Sends SMS confirmation after quote generation
  *
  * Message template:
- * "Tack för din förfrågan! Din offert är skickad till {email}. Boka platsbesök: smova.se/b/{id}
+ * "Hej! Tack för din förfrågan. Din offert är skickad till {email}. Boka platsbesök: smova.se/b/{id}
  *
  * MVh,
  * Ramiro Botero
@@ -88,8 +88,8 @@ export async function sendQuoteConfirmationSMS(
       ? customerEmail.substring(0, 22) + '...'
       : customerEmail;
 
-  // Construct message with signature (~145 chars = 1 SMS part)
-  const message = `Tack för din förfrågan! Din offert är skickad till ${shortEmail}. Boka platsbesök: ${shortLink}
+  // Construct message with signature (~150 chars = 1 SMS part)
+  const message = `Hej! Tack för din förfrågan. Din offert är skickad till ${shortEmail}. Boka platsbesök: ${shortLink}
 
 MVh,
 Ramiro Botero
