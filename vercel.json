@@ -10,6 +10,12 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/follow-up-emails",
+      "schedule": "0 * * * *"
+    }
+  ],
   "regions": ["iad1"],
   "build": {
     "env": {

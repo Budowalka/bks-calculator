@@ -3,6 +3,7 @@ interface CalLinkData {
   lastName?: string;
   email?: string;
   phone?: string;
+  leadId?: string;
 }
 
 /**
@@ -40,6 +41,11 @@ export function generateCalLink(data: CalLinkData): string {
     }
     
     params.append('phone', phone);
+  }
+
+  // Pass leadId as Cal.com metadata for webhook identification
+  if (data.leadId?.trim()) {
+    params.append('metadata[leadId]', data.leadId.trim());
   }
 
   // Return URL with parameters if any exist, otherwise just base URL

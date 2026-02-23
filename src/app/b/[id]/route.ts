@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEstimateForPDF } from '@/lib/airtable';
+import { getEstimateForPDF, updateLeadBookingStatus } from '@/lib/airtable';
 import { generateCalLink } from '@/lib/cal-link-generator';
 
 /**
@@ -25,12 +25,20 @@ export async function GET(
       return NextResponse.redirect('https://cal.com/bksentreprenad/platsbesok');
     }
 
-    // Generate personalized Cal.com link
+    // Track link click in Airtable (fire-and-forget)
+    if (estimate.lead.id) {
+      updateLeadBookingStatus(estimate.lead.id, 'Link Clicked').catch(err =>
+        console.error('[Shortener] Failed to update booking status:', err)
+      );
+    }
+
+    // Generate personalized Cal.com link with leadId for webhook tracking
     const calLink = generateCalLink({
       firstName: estimate.lead.first_name,
       lastName: estimate.lead.last_name,
       email: estimate.lead.email,
       phone: estimate.lead.phone,
+      leadId: estimate.lead.id || undefined,
     });
 
     return NextResponse.redirect(calLink);

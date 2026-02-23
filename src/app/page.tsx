@@ -2,11 +2,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calculator, Clock, CheckCircle } from 'lucide-react';
+import { Calculator, Clock, CheckCircle, Phone } from 'lucide-react';
+import { AttributionCapture } from '@/components/analytics/AttributionCapture';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <AttributionCapture />
       {/* Hero Section */}
       <div className="relative min-h-screen flex items-center">
         {/* Background Image with Overlay */}
@@ -38,7 +40,7 @@ export default function Home() {
               <div className="text-center">
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-4">
                   Räkna priset på din
-                  <span className="block text-blue-600">stenläggning</span>
+                  <span className="block text-blue-600">stenläggning i Stockholm</span>
                 </h1>
                 <p className="text-xl md:text-2xl text-gray-700 leading-relaxed">
                   Få en professionell offert på bara <strong>3 minuter</strong>. 
@@ -55,7 +57,18 @@ export default function Home() {
                       Starta kalkylatorn
                     </Link>
                   </Button>
+                  <Button asChild size="lg" variant="outline" className="text-lg px-10 py-6 border-blue-300 text-blue-700 hover:bg-blue-50">
+                    <a href="tel:+46735757897" className="flex items-center gap-2">
+                      <Phone className="w-5 h-5" />
+                      073-575 78 97
+                    </a>
+                  </Button>
                 </div>
+
+                {/* Social proof */}
+                <p className="text-sm font-medium text-gray-500">
+                  Redan 450+ fastighetsägare i Stockholm har fått offert
+                </p>
 
                 {/* Trust indicators */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-600">

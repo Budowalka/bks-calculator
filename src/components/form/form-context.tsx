@@ -1,8 +1,10 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData, CustomerInfo, FormStep, QuoteResponse } from '@/lib/types';
+import { trackFormStart, trackFormStep, trackQuoteGenerated } from '@/lib/analytics';
+import { getAttribution } from '@/lib/attribution';
 
 interface FormContextType {
   // Form data
@@ -72,6 +74,15 @@ export function FormProvider({ children }: FormProviderProps) {
   
   const totalSteps = 9;
 
+  // Track form start on mount (once)
+  const hasTrackedStart = useRef(false);
+  useEffect(() => {
+    if (!hasTrackedStart.current) {
+      trackFormStart();
+      hasTrackedStart.current = true;
+    }
+  }, []);
+
   const updateFormData = useCallback((data: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
   }, []);
@@ -82,9 +93,14 @@ export function FormProvider({ children }: FormProviderProps) {
 
   const nextStep = useCallback(() => {
     if (currentStep < totalSteps) {
+      // Track the completed step with the selected value
+      const stepKey = ['materialval', 'area', 'forberedelse', 'anvandning', 'fog', 'kantsten_need', 'plats_maskin', 'plats_kranbil', 'name'][currentStep - 1];
+      const stepValue = stepKey ? String(formData[stepKey as keyof FormData] ?? '') : '';
+      trackFormStep(currentStep, stepValue);
+
       setCurrentStep(prev => (prev + 1) as FormStep);
     }
-  }, [currentStep, totalSteps]);
+  }, [currentStep, totalSteps, formData]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 1) {
@@ -122,7 +138,7 @@ export function FormProvider({ children }: FormProviderProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ formData }),
+        body: JSON.stringify({ formData, attribution: getAttribution() }),
       });
 
       if (!response.ok) {
@@ -134,6 +150,8 @@ export function FormProvider({ children }: FormProviderProps) {
       
       if (result.success) {
         console.log('Quote processing completed successfully:', result);
+        trackFormStep(9, formData.email || '');
+        trackQuoteGenerated(result.quote?.total_sek_with_vat);
         setSubmissionSuccess(true);
         setQuoteData(result);
         

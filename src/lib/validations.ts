@@ -94,6 +94,22 @@ export const Step8Schema = z.object({
 
 export const Step9Schema = CustomerInfoSchema;
 
+// Contact form fields as used in the UI (single name field)
+export const ContactFormSchema = z.object({
+  name: z.string()
+    .min(3, 'Ange ditt för- och efternamn')
+    .refine(val => val.trim().includes(' '), {
+      message: 'Ange både för- och efternamn',
+    }),
+  email: z.string().email('Ogiltig e-postadress'),
+  phone: z.string().regex(
+    /^\+?[0-9\s\-()]{8,15}$/,
+    'Ogiltigt telefonnummer'
+  ),
+  address: z.string().min(5, 'Ange en giltig adress'),
+});
+
+export type ContactFormType = z.infer<typeof ContactFormSchema>;
 export type FormDataType = z.infer<typeof FormDataSchema>;
 export type CustomerInfoType = z.infer<typeof CustomerInfoSchema>;
 export type CompleteFormType = z.infer<typeof CompleteFormSchema>;

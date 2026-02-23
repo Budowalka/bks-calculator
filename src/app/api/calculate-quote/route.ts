@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BKSCalculator } from '@/lib/calculator';
 import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimate, updateLeadSentMessages } from '@/lib/airtable';
 import { FormData, CustomerInfo, QuoteResponse } from '@/lib/types';
+import { Attribution } from '@/lib/attribution';
 import { generatePreviewPDF, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
 import { sendQuoteEmail, validateEmailConfig } from '@/lib/email-service';
 import { sendQuoteConfirmationSMS } from '@/lib/sms';
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body = await request.json();
-    const { formData }: { formData: FormData } = body;
+    const { formData, attribution }: { formData: FormData; attribution?: Attribution } = body;
 
     // Validate required fields
     if (!formData) {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Create lead record in Airtable
     const startLead = Date.now();
-    const leadId = await createLead(formData, customerInfo);
+    const leadId = await createLead(formData, customerInfo, attribution);
     console.log(`✓ Lead created in ${Date.now() - startLead}ms (ID: ${leadId})`);
     
     // Create estimate record in Airtable
@@ -252,9 +253,9 @@ export async function POST(request: NextRequest) {
         },
         next_steps: {
           title: "Kontakta oss direkt",
-          content: "Ring oss på 08-XXX XX XX eller skicka e-post till info@bks.se så hjälper vi dig direkt.",
+          content: "Ring oss på 073-575 78 97 eller skicka e-post till info@bks.se så hjälper vi dig direkt.",
           cta_text: "Kontakta oss",
-          cta_url: "tel:08XXXXXXX"
+          cta_url: "tel:+46735757897"
         }
       },
       { status: 500 }

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FormData } from '@/lib/types';
+import { ContactFormSchema } from '@/lib/validations';
 import { QuoteProcessingLoader } from '@/components/ui/quote-processing-loader';
 
 export function ContactInfoStep() {
@@ -27,6 +28,7 @@ export function ContactInfoStep() {
     phone: formData.phone || '',
     address: formData.address || ''
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: keyof typeof localData) => (
     e: React.ChangeEvent<HTMLInputElement>
@@ -34,30 +36,50 @@ export function ContactInfoStep() {
     const value = e.target.value;
     setLocalData(prev => ({ ...prev, [field]: value }));
     updateFormData({ [field]: value } as Partial<FormData>);
+    // Clear error on edit
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
-  // Check if form is complete
+  // Check if form is complete (basic non-empty check for button state)
   useEffect(() => {
-    const isComplete = localData.name.trim() && 
-                      localData.email.trim() && 
-                      localData.phone.trim() && 
+    const isComplete = localData.name.trim() &&
+                      localData.email.trim() &&
+                      localData.phone.trim() &&
                       localData.address.trim();
-    
+
     if (isComplete) {
       markStepCompleted(9);
     }
   }, [localData, markStepCompleted]);
 
-  const isNextDisabled = !localData.name.trim() || 
-                        !localData.email.trim() || 
-                        !localData.phone.trim() || 
+  const isNextDisabled = !localData.name.trim() ||
+                        !localData.email.trim() ||
+                        !localData.phone.trim() ||
                         !localData.address.trim() ||
                         isSubmitting;
 
   const handleSubmit = async () => {
-    if (!isNextDisabled) {
-      await submitForm();
+    // Validate with Zod before submitting
+    const result = ContactFormSchema.safeParse(localData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const field = String(issue.path[0]);
+        if (!errors[field]) {
+          errors[field] = issue.message;
+        }
+      }
+      setFieldErrors(errors);
+      return;
     }
+    setFieldErrors({});
+    await submitForm();
   };
 
   const handleProcessingComplete = () => {
@@ -103,8 +125,11 @@ export function ContactInfoStep() {
               placeholder="T.ex. Anna Andersson"
               value={localData.name}
               onChange={handleInputChange('name')}
-              className="h-11"
+              className={`h-11 ${fieldErrors.name ? 'border-red-500' : ''}`}
             />
+            {fieldErrors.name && (
+              <p className="text-xs text-red-500">{fieldErrors.name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -117,8 +142,11 @@ export function ContactInfoStep() {
               placeholder="T.ex. 070-123 45 67"
               value={localData.phone}
               onChange={handleInputChange('phone')}
-              className="h-11"
+              className={`h-11 ${fieldErrors.phone ? 'border-red-500' : ''}`}
             />
+            {fieldErrors.phone && (
+              <p className="text-xs text-red-500">{fieldErrors.phone}</p>
+            )}
           </div>
         </div>
 
@@ -132,8 +160,11 @@ export function ContactInfoStep() {
             placeholder="T.ex. anna@exempel.se"
             value={localData.email}
             onChange={handleInputChange('email')}
-            className="h-11"
+            className={`h-11 ${fieldErrors.email ? 'border-red-500' : ''}`}
           />
+          {fieldErrors.email && (
+            <p className="text-xs text-red-500">{fieldErrors.email}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -146,8 +177,11 @@ export function ContactInfoStep() {
             placeholder="T.ex. Storgatan 123, 123 45 Stockholm"
             value={localData.address}
             onChange={handleInputChange('address')}
-            className="h-11"
+            className={`h-11 ${fieldErrors.address ? 'border-red-500' : ''}`}
           />
+          {fieldErrors.address && (
+            <p className="text-xs text-red-500">{fieldErrors.address}</p>
+          )}
           <p className="text-xs text-muted-foreground">
             Adressen där stenläggningen ska utföras
           </p>

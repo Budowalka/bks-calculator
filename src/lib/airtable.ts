@@ -2,6 +2,7 @@
 
 import Airtable from 'airtable';
 import { PricingComponent, FormData, CustomerInfo, Quote, MaterialUsage } from './types';
+import { Attribution } from './attribution';
 
 // Initialize Airtable
 const base = new Airtable({
@@ -181,13 +182,14 @@ export async function getPricingComponents(): Promise<PricingComponent[]> {
  * Create a lead record in Airtable
  */
 export async function createLead(
-  formData: FormData, 
-  customerInfo: CustomerInfo
+  formData: FormData,
+  customerInfo: CustomerInfo,
+  attribution?: Attribution
 ): Promise<string> {
   try {
-    const record = await base(TABLES.LEAD_DATA).create({
+    const fields: Record<string, unknown> = {
       'Lead First Name': customerInfo.first_name,
-      'Lead Last Name': customerInfo.last_name,  
+      'Lead Last Name': customerInfo.last_name,
       'Lead Phone Number': customerInfo.phone,
       'Lead Email': customerInfo.email,
       'Full Address': customerInfo.address,
@@ -201,9 +203,19 @@ export async function createLead(
       'materialval-kantsten': formData.materialval_kantsten || null,
       'maskin-plats': formData.plats_maskin || null,
       'plats-kranbil': formData.plats_kranbil,
-      'Lead Status': '10 - 🤖 Automatic Proposal'
+      'Lead Status': '10 - 🤖 Automatic Proposal',
+      'Email Sequence Stage': 1,
+    };
+
+    // Add attribution fields if present
+    if (attribution?.gclid) fields['gclid'] = attribution.gclid;
+    if (attribution?.utm_source) fields['utm_source'] = attribution.utm_source;
+    if (attribution?.utm_medium) fields['utm_medium'] = attribution.utm_medium;
+    if (attribution?.utm_campaign) fields['utm_campaign'] = attribution.utm_campaign;
+    if (attribution?.utm_term) fields['utm_term'] = attribution.utm_term;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    const record = await base(TABLES.LEAD_DATA).create(fields as any);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (record as any).id;
@@ -561,6 +573,84 @@ export async function uploadPDFToAirtableEstimate(
 /**
  * Update the Sent Messages field in Lead_Data table
  */
+/**
+ * Update the Booking Status field on a Lead_Data record
+ */
+export async function updateLeadBookingStatus(
+  leadId: string,
+  status: 'Link Clicked' | 'Booked' | 'Completed'
+): Promise<void> {
+  try {
+    await base(TABLES.LEAD_DATA).update(leadId, {
+      'Booking Status': status,
+    });
+    console.log(`Booking status updated to "${status}" for lead:`, leadId);
+  } catch (error) {
+    console.error('Error updating booking status:', error);
+  }
+}
+
+/**
+ * Update the Email Sequence Stage field on a Lead_Data record
+ */
+export async function updateLeadEmailStage(
+  leadId: string,
+  stage: number
+): Promise<void> {
+  try {
+    await base(TABLES.LEAD_DATA).update(leadId, {
+      'Email Sequence Stage': stage,
+    });
+  } catch (error) {
+    console.error('Error updating email stage:', error);
+  }
+}
+
+/**
+ * Get leads that need a follow-up email at a given stage
+ */
+export async function getLeadsNeedingFollowUp(
+  stage: number,
+  minHoursSinceLastEmail: number
+): Promise<Array<{
+  id: string;
+  email: string;
+  firstName: string;
+  bookingStatus: string | null;
+}>> {
+  try {
+    // Find leads at the given email stage that:
+    // 1. Haven't booked yet
+    // 2. Had their last email sent at least N hours ago
+    const records = await base(TABLES.LEAD_DATA)
+      .select({
+        filterByFormula: `AND(
+          {Email Sequence Stage} = ${stage},
+          {Lead Status} = '10 - 🤖 Automatic Proposal',
+          OR({Booking Status} = '', {Booking Status} = 'Link Clicked'),
+          {Last Email Sent} != '',
+          DATETIME_DIFF(NOW(), {Last Email Sent}, 'hours') >= ${minHoursSinceLastEmail}
+        )`,
+        fields: [
+          'Lead Email',
+          'Lead First Name',
+          'Booking Status',
+        ],
+      })
+      .all();
+
+    return records.map(record => ({
+      id: record.id,
+      email: (record.get('Lead Email') as string) || '',
+      firstName: (record.get('Lead First Name') as string) || '',
+      bookingStatus: (record.get('Booking Status') as string) || null,
+    }));
+  } catch (error) {
+    console.error('Error fetching leads for follow-up:', error);
+    return [];
+  }
+}
+
 export async function updateLeadSentMessages(
   leadId: string,
   emailSubject: string,
