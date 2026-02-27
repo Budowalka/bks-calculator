@@ -62,6 +62,34 @@ export function trackQuotePageView(quoteId?: string) {
   });
 }
 
+// Booking page events
+
+export function trackBookingPageView() {
+  pushToDataLayer('booking_page_view', {
+    page_name: 'boka_hembesok',
+  });
+}
+
+export function trackCalendarLoaded() {
+  pushToDataLayer('calendar_loaded', {
+    page_name: 'boka_hembesok',
+  });
+}
+
+export function trackScrollToCalendar(source: string) {
+  pushToDataLayer('scroll_to_calendar', {
+    page_name: 'boka_hembesok',
+    click_source: source,
+  });
+}
+
+export function trackPhoneClick(source: string) {
+  pushToDataLayer('phone_click', {
+    page_name: 'boka_hembesok',
+    click_source: source,
+  });
+}
+
 // Extend Window for dataLayer
 declare global {
   interface Window {
