@@ -90,6 +90,38 @@ export function trackPhoneClick(source: string) {
   });
 }
 
+// Booking confirmation events
+
+export function trackBookingConfirmed() {
+  pushToDataLayer('booking_confirmed', {
+    page_name: 'boka_hembesok_tack',
+  });
+}
+
+// Enhanced Conversions — user data for Google Ads matching
+
+interface EnhancedConversionsData {
+  email?: string;
+  phone_number?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export function pushEnhancedConversions(data: EnhancedConversionsData) {
+  if (typeof window === 'undefined') return;
+
+  const filtered = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v)
+  );
+  if (Object.keys(filtered).length === 0) return;
+
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'enhanced_conversion_data',
+    enhanced_conversions: filtered,
+  });
+}
+
 // Extend Window for dataLayer
 declare global {
   interface Window {

@@ -7,7 +7,7 @@ import { ExitIntentModal } from '@/components/quote/ExitIntentModal';
 import { QuoteResponse } from '@/lib/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { trackQuotePageView } from '@/lib/analytics';
+import { trackQuotePageView, pushEnhancedConversions } from '@/lib/analytics';
 
 export default function ThankYouPage() {
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
@@ -54,6 +54,15 @@ export default function ThankYouPage() {
           if (parsedData.success && parsedData.quote && parsedData.quote.items && Array.isArray(parsedData.quote.items)) {
             setQuoteData(parsedData);
             trackQuotePageView(parsedData.quote.quote_id);
+            // Enhanced Conversions — send user data for Google Ads matching
+            if (parsedData.customerInfo) {
+              pushEnhancedConversions({
+                email: parsedData.customerInfo.email,
+                phone_number: parsedData.customerInfo.phone,
+                first_name: parsedData.customerInfo.first_name,
+                last_name: parsedData.customerInfo.last_name,
+              });
+            }
             // Clear the data after loading to prevent reuse
             localStorage.removeItem('bks-quote-data');
             console.log('Quote data validated, loaded and cleared from localStorage');
