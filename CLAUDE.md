@@ -60,8 +60,12 @@ Airtable Base ID: app0hNMsMj2Luv8Ns
 AIRTABLE_API_KEY=your_airtable_api_key_here
 AIRTABLE_BASE_ID=app0hNMsMj2Luv8Ns
 
-# Application Configuration  
+# Application Configuration
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Analytics (GTM + GA4)
+NEXT_PUBLIC_GTM_ID=GTM-PQMV6NZ6
+NEXT_PUBLIC_GA_ID=G-RF51135N7P
 
 # Email Configuration (SendGrid)
 SENDGRID_API_KEY=your_sendgrid_api_key_here
