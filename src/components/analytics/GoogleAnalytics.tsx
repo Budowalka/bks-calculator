@@ -9,7 +9,7 @@ interface GoogleAnalyticsProps {
 
 export function GoogleAnalytics({ 
   gaId = process.env.NEXT_PUBLIC_GA_ID || 'G-RF51135N7P', 
-  gtmId = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-PQMV6NZ6'
+  gtmId = 'GTM-PQMV6NZ6'
 }: GoogleAnalyticsProps = {}) {
   return (
     <>
@@ -49,7 +49,7 @@ export function GoogleAnalytics({
   );
 }
 
-export function GoogleTagManagerNoScript({ gtmId = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-PQMV6NZ6' }: { gtmId?: string } = {}) {
+export function GoogleTagManagerNoScript({ gtmId = 'GTM-PQMV6NZ6' }: { gtmId?: string } = {}) {
   return (
     <noscript>
       <iframe 
