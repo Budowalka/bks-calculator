@@ -132,6 +132,14 @@
   }
 }
 
+/* Desktop scale-up: 125% base font-size makes all rem values larger.
+   Mobile stays at default 16px. This mimics browser zoom 125%. */
+@media (min-width: 1024px) {
+  html {
+    font-size: 125%;
+  }
+}
+
 /* Custom slider styles */
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
