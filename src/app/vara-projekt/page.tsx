@@ -28,6 +28,21 @@ export const metadata: Metadata = {
       'Se våra senaste projekt inom stenläggning och markarbete i Stockholmsområdet.',
     type: 'website',
     locale: 'sv_SE',
+    images: [
+      {
+        url: '/images/Stenlägning-färdig-projekt.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Stenläggning projekt i Stockholm – BKS Entreprenad',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Våra projekt | Stenläggning & markarbete – BKS Entreprenad',
+    description:
+      'Se våra senaste projekt inom stenläggning och markarbete i Stockholmsområdet.',
+    images: ['/images/Stenlägning-färdig-projekt.jpg'],
   },
 };
 
@@ -60,13 +75,13 @@ const jsonLd = {
           '@type': 'ListItem',
           position: 1,
           name: 'Hem',
-          item: 'https://bksentreprenad.se',
+          item: 'https://smova.se',
         },
         {
           '@type': 'ListItem',
           position: 2,
           name: 'Våra projekt',
-          item: 'https://bksentreprenad.se/vara-projekt',
+          item: 'https://smova.se/vara-projekt',
         },
       ],
     },

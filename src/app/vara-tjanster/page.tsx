@@ -31,6 +31,21 @@ export const metadata: Metadata = {
       'Stenläggning, plattsättning, markarbete och asfaltering i hela Stockholmsområdet.',
     type: 'website',
     locale: 'sv_SE',
+    images: [
+      {
+        url: '/images/Stenlägning-färdig-projekt.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Stenläggning och markarbete – BKS Entreprenad Stockholm',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Våra tjänster | Stenläggning & markarbete – BKS Entreprenad',
+    description:
+      'Stenläggning, plattsättning, markarbete och asfaltering i hela Stockholmsområdet.',
+    images: ['/images/Stenlägning-färdig-projekt.jpg'],
   },
 };
 
@@ -75,13 +90,13 @@ const jsonLd = {
           '@type': 'ListItem',
           position: 1,
           name: 'Hem',
-          item: 'https://bksentreprenad.se',
+          item: 'https://smova.se',
         },
         {
           '@type': 'ListItem',
           position: 2,
           name: 'Våra tjänster',
-          item: 'https://bksentreprenad.se/vara-tjanster',
+          item: 'https://smova.se/vara-tjanster',
         },
       ],
     },

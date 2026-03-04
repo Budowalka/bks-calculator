@@ -52,14 +52,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://bks-calculator.vercel.app'),
+  metadataBase: new URL('https://smova.se'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: "BKS Entreprenad - Räkna priset på stenläggning i Stockholm",
     description: "Få en professionell offert för stenläggning på bara 3 minuter. Kostnadsfritt och utan förpliktelser.",
-    url: 'https://bks-calculator.vercel.app',
+    url: 'https://smova.se',
     siteName: 'BKS Stenläggningskalkylator',
     images: [
       {
@@ -89,9 +89,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'google-site-verification-code', // Replace with actual verification code
-  },
+  // verification: { google: 'ADD_REAL_CODE_HERE' },
 };
 
 export default function RootLayout({
@@ -110,7 +108,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
               "name": "BKS Äkeri AB",
-              "image": "https://bks-calculator.vercel.app/images/Stenlägning-färdig-projekt.jpg",
+              "image": "https://smova.se/images/Stenlägning-färdig-projekt.jpg",
               "description": "Professionell stenläggning i Stockholm. Kostnadsfria offerter på betongplattor, marksten, asfalt och alla typer av stenläggning.",
               "address": {
                 "@type": "PostalAddress",
@@ -120,7 +118,7 @@ export default function RootLayout({
                 "addressCountry": "SE"
               },
               "telephone": "+46735757897",
-              "url": "https://bks-calculator.vercel.app",
+              "url": "https://smova.se",
               "priceRange": "$$",
               "serviceArea": {
                 "@type": "City",
@@ -158,7 +156,7 @@ export default function RootLayout({
               },
               "potentialAction": {
                 "@type": "UseAction",
-                "target": "https://bks-calculator.vercel.app/kalkyl",
+                "target": "https://smova.se/kalkyl",
                 "name": "Beräkna offert för stenläggning"
               }
             })

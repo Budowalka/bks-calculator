@@ -72,7 +72,7 @@ const jsonLd = {
         '@type': 'ReserveAction',
         target: {
           '@type': 'EntryPoint',
-          urlTemplate: 'https://bks-calculator.vercel.app/boka-hembesok#boka',
+          urlTemplate: 'https://smova.se/boka-hembesok#boka',
         },
         result: {
           '@type': 'Reservation',

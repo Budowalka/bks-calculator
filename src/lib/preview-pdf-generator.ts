@@ -93,7 +93,7 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
   `).join('');
 
   // BKS Logo - use public URL for consistency with full PDF
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://bks-calculator.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smova.se';
   const bksLogoUrl = `${baseUrl}/images/logo-bks.png`;
 
   return `
