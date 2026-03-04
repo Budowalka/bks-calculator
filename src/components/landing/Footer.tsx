@@ -46,17 +46,20 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="#om-oss"
+                <Link
+                  href="/vara-tjanster"
                   className="hover:text-gold transition-colors"
                 >
-                  Om oss
-                </a>
+                  Våra tjänster
+                </Link>
               </li>
               <li>
-                <a href="#faq" className="hover:text-gold transition-colors">
-                  Vanliga frågor
-                </a>
+                <Link
+                  href="/vara-projekt"
+                  className="hover:text-gold transition-colors"
+                >
+                  Våra projekt
+                </Link>
               </li>
             </ul>
           </div>
