@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,35 +37,45 @@ export function BookingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="bg-white py-16 md:py-20">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-10">
+    <section className="bg-sand-50 py-16 md:py-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl">
+        <div className="w-10 h-0.5 bg-gold mx-auto mb-6" />
+        <h2 className="font-display text-2xl md:text-3xl text-center text-charcoal mb-10">
           Vanliga frågor
         </h2>
-        <div className="divide-y divide-gray-100 border-t border-b border-gray-100">
+        <div className="divide-y divide-sand-200">
           {faqs.map((faq, i) => (
             <div key={i}>
               <button
-                className="flex w-full items-center justify-between py-5 text-left"
+                className="flex w-full items-center justify-between py-5 text-left group"
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
                 aria-expanded={openIndex === i}
               >
-                <span className="font-medium text-gray-900 pr-4">{faq.question}</span>
+                <span className="font-display text-lg text-charcoal pr-4 group-hover:text-gold-dark transition-colors">
+                  {faq.question}
+                </span>
                 <ChevronDown
                   className={cn(
-                    'h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200',
-                    openIndex === i && 'rotate-180'
+                    'h-5 w-5 text-stone-400 shrink-0 transition-transform duration-300',
+                    openIndex === i && 'rotate-180 text-gold'
                   )}
                 />
               </button>
-              <div
-                className={cn(
-                  'overflow-hidden transition-all duration-200',
-                  openIndex === i ? 'max-h-60 pb-5' : 'max-h-0'
+              <AnimatePresence>
+                {openIndex === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
+                    className="overflow-hidden"
+                  >
+                    <p className="text-stone-500 leading-relaxed pb-5">
+                      {faq.answer}
+                    </p>
+                  </motion.div>
                 )}
-              >
-                <p className="text-sm text-gray-600 leading-relaxed">{faq.answer}</p>
-              </div>
+              </AnimatePresence>
             </div>
           ))}
         </div>

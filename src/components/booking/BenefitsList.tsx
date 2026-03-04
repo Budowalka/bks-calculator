@@ -43,21 +43,21 @@ const benefits = [
 
 export function BenefitsList() {
   return (
-    <section className="bg-gray-50 py-16 md:py-20">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-10">
+    <section className="bg-sand-50 py-16 md:py-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="font-display text-2xl md:text-3xl text-center text-charcoal mb-10">
           Vad ingår i hembesöket?
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {benefits.map((b) => (
             <Card key={b.title} className="border-0 shadow-sm bg-white">
               <CardContent className="flex gap-4 items-start p-6">
-                <div className="rounded-lg bg-blue-50 p-2.5 shrink-0">
-                  <b.icon className="h-5 w-5 text-blue-600" />
+                <div className="rounded-lg bg-gold/10 p-2.5 shrink-0">
+                  <b.icon className="h-5 w-5 text-gold" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{b.title}</h3>
-                  <p className="text-sm text-gray-600">{b.description}</p>
+                  <h3 className="font-medium text-charcoal mb-1">{b.title}</h3>
+                  <p className="text-sm text-stone-500">{b.description}</p>
                 </div>
               </CardContent>
             </Card>

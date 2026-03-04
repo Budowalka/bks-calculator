@@ -44,7 +44,7 @@ function Stars({ count }: { count: number }) {
   return (
     <div className="flex gap-0.5">
       {Array.from({ length: count }).map((_, i) => (
-        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+        <Star key={i} className="h-4 w-4 fill-gold text-gold" />
       ))}
     </div>
   );
@@ -52,31 +52,32 @@ function Stars({ count }: { count: number }) {
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-gray-50 py-16 md:py-20">
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-4">
+    <section className="bg-charcoal py-16 md:py-20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-10 h-0.5 bg-gold mx-auto mb-6" />
+        <h2 className="font-display text-2xl md:text-3xl text-center text-white mb-4">
           Vad våra kunder säger
         </h2>
-        <p className="text-center text-gray-600 mb-10">
+        <p className="text-center text-white/40 mb-10">
           Baserat på 450+ genomförda projekt i Stockholmsområdet
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {testimonials.map((t) => (
-            <Card key={t.name} className="border-0 shadow-sm bg-white">
+            <Card key={t.name} className="border-0 shadow-sm bg-white/5 border-white/10">
               <CardContent className="p-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <Stars count={t.rating} />
-                  <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-medium text-gold bg-gold/10 px-2 py-0.5 rounded-full">
                     {t.project}
                   </span>
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed">
+                <p className="font-display italic text-white/70 text-sm leading-relaxed">
                   &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">{t.name}</span>
-                  <span className="text-gray-400 mx-1">·</span>
-                  <span className="text-gray-500">{t.location}</span>
+                  <span className="font-medium text-white/60">{t.name}</span>
+                  <span className="text-white/30 mx-1">·</span>
+                  <span className="text-white/40">{t.location}</span>
                 </div>
               </CardContent>
             </Card>

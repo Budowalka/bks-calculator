@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Newsreader, Outfit } from "next/font/google";
 import "./globals.css";
 import { GoogleAnalytics, GoogleTagManagerNoScript } from "@/components/analytics/GoogleAnalytics";
 
@@ -13,19 +13,36 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "BKS Entreprenad - Räkna priset på stenläggning i Stockholm | Kostnadsfri offert",
-  description: "Få en professionell offert för stenläggning på bara 3 minuter. Kostnadsfritt och utan förpliktelser. Betongplattor, marksten, asfalt - alla typer av stenläggning i Stockholm.",
+  description: "BKS Entreprenad — professionell stenläggning och markarbete i Stockholm sedan 2018. Räkna priset online med vår kalkylator. Kostnadsfri offert på 3 minuter. Marksten, betongplattor, gatsten, asfalt.",
   keywords: [
     "stenläggning Stockholm",
-    "kostnadsfri offert stenläggning", 
+    "plattsättare Stockholm",
+    "stenläggare Stockholm",
+    "markarbete Stockholm",
+    "kostnadsfri offert stenläggning",
     "pris stenläggning",
     "betongplattor pris",
     "marksten Stockholm",
     "asfalt pris",
     "stenläggning kalkylator",
     "BKS Entreprenad",
-    "stenläggning företag Stockholm"
+    "stenläggning företag Stockholm",
+    "gatsten Stockholm",
+    "trädgårdsanläggning Stockholm"
   ],
   authors: [{ name: "BKS Entreprenad" }],
   creator: "BKS Entreprenad",
@@ -97,6 +114,8 @@ export default function RootLayout({
               "description": "Professionell stenläggning i Stockholm. Kostnadsfria offerter på betongplattor, marksten, asfalt och alla typer av stenläggning.",
               "address": {
                 "@type": "PostalAddress",
+                "streetAddress": "Kungsgatan 29",
+                "postalCode": "111 56",
                 "addressLocality": "Stockholm",
                 "addressCountry": "SE"
               },
@@ -147,7 +166,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} ${outfit.variable} antialiased`}
       >
         <GoogleTagManagerNoScript />
         {children}

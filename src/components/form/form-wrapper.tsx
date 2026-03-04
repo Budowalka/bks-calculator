@@ -64,7 +64,7 @@ export function FormWrapper({
   const canGoNext = currentStep < totalSteps;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-sand-50 flex flex-col font-body">
       {/* Progress bar - fixed at top */}
       {showProgress && (
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4">
@@ -91,7 +91,7 @@ export function FormWrapper({
               <Card className="shadow-lg">
                 <CardHeader className="pb-6">
                   <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold text-foreground">
+                    <h1 className="text-2xl font-semibold text-foreground font-display">
                       {title}
                     </h1>
                     {description && (
