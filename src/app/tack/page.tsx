@@ -8,6 +8,8 @@ import { QuoteResponse } from '@/lib/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { trackQuotePageView, pushEnhancedConversions } from '@/lib/analytics';
+import { StickyHeader } from '@/components/landing/StickyHeader';
+import { Footer } from '@/components/landing/Footer';
 
 export default function ThankYouPage() {
   const [quoteData, setQuoteData] = useState<QuoteResponse | null>(null);
@@ -114,9 +116,10 @@ export default function ThankYouPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-sand-50 flex items-center justify-center font-body">
+        <StickyHeader />
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
-          <p className="text-stone-500">Laddar din offert...</p>
+          <p className="text-stone-500 font-body">Laddar din offert...</p>
         </div>
       </div>
     );
@@ -124,25 +127,33 @@ export default function ThankYouPage() {
 
   if (!quoteData) {
     return (
-      <div className="min-h-screen bg-sand-50 flex items-center justify-center p-4 font-body">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertTriangle className="w-4 h-4" />
-          <AlertDescription>
-            <div className="font-medium mb-1">Ingen offert hittades</div>
-            <p className="text-sm">Vänligen fyll i kalkylatorn igen för att få din offert.</p>
-          </AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-sand-50 flex flex-col font-body">
+        <StickyHeader />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertTriangle className="w-4 h-4" />
+            <AlertDescription>
+              <div className="font-medium mb-1">Ingen offert hittades</div>
+              <p className="text-sm">Vänligen fyll i kalkylatorn igen för att få din offert.</p>
+            </AlertDescription>
+          </Alert>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-sand-50 font-body">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-4xl mx-auto">
-          <QuoteDisplay quoteData={quoteData} />
+    <div className="min-h-screen bg-sand-50 font-body flex flex-col">
+      <StickyHeader />
+      <main className="flex-1 pt-24 pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <QuoteDisplay quoteData={quoteData} />
+          </div>
         </div>
-      </div>
+      </main>
+      <Footer />
 
       <ExitIntentModal
         isOpen={showExitModal}

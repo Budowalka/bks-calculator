@@ -1,10 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QuoteItem } from '@/lib/types';
-import { 
-  groupQuoteItemsByCategory, 
-  getCategoryDisplayName, 
-  formatCurrency, 
-  formatQuantityWithUnit 
+import {
+  groupQuoteItemsByCategory,
+  getCategoryDisplayName,
+  formatCurrency,
+  formatQuantityWithUnit
 } from '@/lib/quote-utils';
 
 interface QuoteItemsTableProps {
@@ -15,53 +14,47 @@ export function QuoteItemsTable({ items }: QuoteItemsTableProps) {
   const groupedItems = groupQuoteItemsByCategory(items);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Detaljerad uppdelning</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <div className="rounded-xl border border-sand-200 bg-white overflow-hidden">
+      <div className="px-6 py-5 border-b border-sand-200">
+        <h2 className="font-display text-xl text-charcoal">Detaljerad uppdelning</h2>
+      </div>
+
+      <div className="divide-y divide-sand-100">
         {Object.entries(groupedItems).map(([category, categoryItems]) => (
-          <div key={category} className="space-y-3">
+          <div key={category} className="px-6 py-5 space-y-3">
             {/* Category Header */}
-            <div className="border-b border-border pb-2">
-              <h3 className="font-semibold text-foreground">
-                {getCategoryDisplayName(category)}
-              </h3>
-            </div>
+            <h3 className="font-display text-base text-charcoal">
+              {getCategoryDisplayName(category)}
+            </h3>
 
             {/* Category Items */}
             <div className="space-y-2">
               {categoryItems.map((item, index) => (
-                <div 
+                <div
                   key={`${category}-${index}`}
-                  className="flex justify-between items-start gap-4 py-2 border-b border-border/50 last:border-b-0"
+                  className="flex justify-between items-start gap-4 py-1.5"
                 >
-                  {/* Item Details */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-foreground">
+                    <div className="text-sm text-charcoal">
                       {item.name}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {formatQuantityWithUnit(item.quantity, item.unit)} × {formatCurrency(item.unit_price_sek)}
+                    <div className="text-xs text-stone-400 mt-0.5">
+                      {formatQuantityWithUnit(item.quantity, item.unit)} x {formatCurrency(item.unit_price_sek)}
                     </div>
                   </div>
-
-                  {/* Item Total */}
-                  <div className="text-right">
-                    <div className="font-medium text-sm">
-                      {formatCurrency(item.total_sek)}
-                    </div>
+                  <div className="text-sm text-charcoal font-medium">
+                    {formatCurrency(item.total_sek)}
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Category Subtotal */}
-            <div className="flex justify-between items-center pt-2 border-t border-border/50">
-              <span className="font-medium text-sm text-muted-foreground">
-                Delsumma {getCategoryDisplayName(category).toLowerCase()}:
+            <div className="flex justify-between items-center pt-2 border-t border-sand-100">
+              <span className="text-sm text-stone-400">
+                Delsumma {getCategoryDisplayName(category).toLowerCase()}
               </span>
-              <span className="font-semibold text-sm">
+              <span className="text-sm text-charcoal font-semibold">
                 {formatCurrency(
                   categoryItems.reduce((sum, item) => sum + item.total_sek, 0)
                 )}
@@ -69,7 +62,7 @@ export function QuoteItemsTable({ items }: QuoteItemsTableProps) {
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
