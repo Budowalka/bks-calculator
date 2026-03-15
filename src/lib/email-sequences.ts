@@ -195,7 +195,7 @@ function stage5Html(d: FollowUpData): string {
   <p>Hej ${d.firstName},</p>
   <p>Din preliminära offert går ut om 9 dagar.</p>
   <p>Jag vet att stenläggning är ett stort beslut. Men om du siktar på vår eller sommar vill jag vara ärlig: våra tider fylls snabbt efter påsk. Det gäller hela branschen i Stockholm.</p>
-  <p>Ett hembesök tar 30 minuter och innebär inget åtagande. Du får en bindande offert, ser materialprover och får en tidsplan.</p>
+  <p>Ett hembesök tar 30 minuter och innebär inget åtagande. Vi tittar på förutsättningarna, ger dig rådgivning kring materialval och skickar sedan en komplett offert med tidsplan.</p>
   <p>Har planerna ändrats? Helt okej. Svara på detta mail så tar vi bort dig från vår lista.</p>
   <p style="text-align:center;margin:30px 0;">
     <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
@@ -213,7 +213,7 @@ Din preliminära offert går ut om 9 dagar.
 
 Jag vet att stenläggning är ett stort beslut. Men om du siktar på vår eller sommar vill jag vara ärlig: våra tider fylls snabbt efter påsk. Det gäller hela branschen i Stockholm.
 
-Ett hembesök tar 30 minuter och innebär inget åtagande. Du får en bindande offert, ser materialprover och får en tidsplan.
+Ett hembesök tar 30 minuter och innebär inget åtagande. Vi tittar på förutsättningarna, ger dig rådgivning kring materialval och skickar sedan en komplett offert med tidsplan.
 
 Har planerna ändrats? Helt okej. Svara på detta mail så tar vi bort dig från vår lista.
 
