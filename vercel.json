@@ -7,7 +7,10 @@
       "maxDuration": 30
     },
     "src/app/api/calculate-quote/route.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "src/app/api/cron/follow-up-emails/route.ts": {
+      "maxDuration": 60
     }
   },
   "crons": [

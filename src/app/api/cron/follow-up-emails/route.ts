@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeadsNeedingFollowUp, updateLeadEmailStage, updateLeadSentMessages } from '@/lib/airtable';
 import { sendFollowUpEmail, STAGE_CONFIG } from '@/lib/email-sequences';
+import { generateCalLink } from '@/lib/cal-link-generator';
 
 /**
  * Vercel Cron Job — processes follow-up email sequences.
@@ -34,8 +35,14 @@ export async function GET(request: NextRequest) {
     for (const lead of leads) {
       if (!lead.email) continue;
 
-      // Build a booking link from the lead id
-      const bookingLink = `https://smova.se/b/${lead.id}`;
+      // Generate Cal.com booking link directly with lead data
+      const bookingLink = generateCalLink({
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        email: lead.email,
+        phone: lead.phone,
+        leadId: lead.id,
+      });
 
       const result = await sendFollowUpEmail(
         config.stage as 1 | 2 | 3,

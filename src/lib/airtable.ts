@@ -607,6 +607,21 @@ export async function updateLeadEmailStage(
 }
 
 /**
+ * Set Last Email Sent on a lead record (used immediately after lead creation
+ * so follow-up cron can pick up the lead even if the initial email fails)
+ */
+export async function setLeadLastEmailSent(leadId: string): Promise<void> {
+  try {
+    await base(TABLES.LEAD_DATA).update(leadId, {
+      'Last Email Sent': new Date().toISOString(),
+    });
+    console.log('Last Email Sent set for lead:', leadId);
+  } catch (error) {
+    console.error('Error setting Last Email Sent:', error);
+  }
+}
+
+/**
  * Get leads that need a follow-up email at a given stage
  */
 export async function getLeadsNeedingFollowUp(
@@ -616,6 +631,8 @@ export async function getLeadsNeedingFollowUp(
   id: string;
   email: string;
   firstName: string;
+  lastName: string;
+  phone: string;
   bookingStatus: string | null;
 }>> {
   try {
@@ -634,6 +651,8 @@ export async function getLeadsNeedingFollowUp(
         fields: [
           'Lead Email',
           'Lead First Name',
+          'Lead Last Name',
+          'Lead Phone Number',
           'Booking Status',
         ],
       })
@@ -643,6 +662,8 @@ export async function getLeadsNeedingFollowUp(
       id: record.id,
       email: (record.get('Lead Email') as string) || '',
       firstName: (record.get('Lead First Name') as string) || '',
+      lastName: (record.get('Lead Last Name') as string) || '',
+      phone: (record.get('Lead Phone Number') as string) || '',
       bookingStatus: (record.get('Booking Status') as string) || null,
     }));
   } catch (error) {

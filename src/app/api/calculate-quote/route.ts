@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BKSCalculator } from '@/lib/calculator';
-import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimate, updateLeadSentMessages } from '@/lib/airtable';
+import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimate, updateLeadSentMessages, setLeadLastEmailSent } from '@/lib/airtable';
 import { FormData, CustomerInfo, QuoteResponse } from '@/lib/types';
 import { Attribution } from '@/lib/attribution';
 import { generatePreviewPDF, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
     
     const totalAirtableTime = Date.now() - startPricing;
     console.log(`=== Total Airtable Operations: ${totalAirtableTime}ms ===`);
+
+    // Set Last Email Sent immediately so follow-up cron can pick up this lead
+    // even if PDF generation or email sending fails below
+    await setLeadLastEmailSent(leadId);
 
     // Synchronous PDF and Email Generation - Complete before responding to user
     console.log('Starting synchronous PDF and email generation for estimate:', estimateId);
@@ -199,16 +203,56 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error in synchronous PDF and email processing:', {
         error: error,
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: errorMsg,
         stack: error instanceof Error ? error.stack : undefined,
         estimateId,
         timestamp: new Date().toISOString()
       });
-      
-      // For now, we'll log the error but continue with the response
-      // In the future, you might want to return an error response here
+
+      // Fallback: try sending email WITHOUT PDF attachment
+      try {
+        console.log('Attempting fallback: sending email without PDF...');
+        const estimate = await getEstimateForPDF(estimateId);
+        if (estimate?.lead?.email) {
+          const emailEstimateData = {
+            estimate_nr: estimate.estimate_nr,
+            total_amount_vat: estimate.total_amount_vat,
+            estimated_work_days: estimate.estimated_work_days,
+            lead: {
+              first_name: estimate.lead.first_name,
+              last_name: estimate.lead.last_name,
+              email: estimate.lead.email,
+              phone: estimate.lead.phone,
+              'Lead First Name': estimate.lead.first_name,
+              'Lead Last Name': estimate.lead.last_name,
+              'Lead Email': estimate.lead.email,
+              'Lead Phone Number': estimate.lead.phone
+            }
+          };
+          const fallbackResult = await sendQuoteEmail(emailEstimateData, undefined, undefined);
+          if (fallbackResult.success) {
+            console.log('Fallback email (without PDF) sent successfully');
+            if (estimate.lead.id) {
+              const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
+              await updateLeadSentMessages(
+                estimate.lead.id,
+                `${emailSubject} (utan PDF — ${errorMsg})`,
+                estimate.lead.email,
+                fallbackResult.messageId,
+                false
+              );
+            }
+          } else {
+            console.error('Fallback email also failed:', fallbackResult.error);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback email attempt failed:', fallbackError);
+      }
+
       console.error('PDF/Email processing failed, but continuing with quote response');
     }
 
