@@ -112,8 +112,8 @@ function stage3Html(d: FollowUpData): string {
   <p>Hej ${d.firstName},</p>
   <p>En sak som ofta skapar förvirring när man jämför offerter: vad ingår egentligen i priset?</p>
   <p><strong>Din offert täcker allt markarbete.</strong> Schakt, bärlager, sättsand, fogning och arbetskostnad. Det som inte ingår är själva stenmaterialet, alltså marksten, betongplattor eller natursten.</p>
-  <p>Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Att välja sten utan att se och känna på den brukar sluta med att man inte blir nöjd.</p>
-  <p>Vid hembesöket tar vi med materialprover så du kan jämföra på plats. Då får du en komplett offert med allt inkluderat.</p>
+  <p>Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Rätt val beror på din tomt, hur ytan ska användas och vad som passar helheten.</p>
+  <p>Vid hembesöket ser vi förutsättningarna på plats och kan ge konkreta tips: vilken typ av sten som passar din mark, var du kan åka och titta på material, och vad som fungerar bäst för just ditt projekt. Efteråt skickar vi en komplett offert med stenpris inkluderat.</p>
   <p>Det är också värt att tänka på om du jämför med andra offerter: vissa företag inkluderar sten, andra inte. Vissa räknar med tunnare bärlager för att pressa priset. Fråga alltid vad som ingår i grunden och hur djupt de gräver.</p>
   <p style="text-align:center;margin:30px 0;">
     <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
@@ -130,9 +130,9 @@ En sak som ofta skapar förvirring när man jämför offerter: vad ingår egentl
 
 Din offert täcker allt markarbete. Schakt, bärlager, sättsand, fogning och arbetskostnad. Det som inte ingår är själva stenmaterialet, alltså marksten, betongplattor eller natursten.
 
-Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Att välja sten utan att se och känna på den brukar sluta med att man inte blir nöjd.
+Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Rätt val beror på din tomt, hur ytan ska användas och vad som passar helheten.
 
-Vid hembesöket tar vi med materialprover så du kan jämföra på plats. Då får du en komplett offert med allt inkluderat.
+Vid hembesöket ser vi förutsättningarna på plats och kan ge konkreta tips: vilken typ av sten som passar din mark, var du kan åka och titta på material, och vad som fungerar bäst för just ditt projekt. Efteråt skickar vi en komplett offert med stenpris inkluderat.
 
 Det är också värt att tänka på om du jämför med andra offerter: vissa företag inkluderar sten, andra inte. Vissa räknar med tunnare bärlager för att pressa priset. Fråga alltid vad som ingår i grunden och hur djupt de gräver.
 
