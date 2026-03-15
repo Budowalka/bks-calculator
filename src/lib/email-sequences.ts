@@ -102,7 +102,7 @@ Boka hembesök: ${d.bookingLink}
 BKS AB — 073-575 78 97`;
 }
 
-// ─── STAGE 3: T+7d — 3 frågor att ställa varje stenläggare ───
+// ─── STAGE 3: T+7d — Co jest w ofercie, a co nie ───
 
 function stage3Html(d: FollowUpData): string {
   return `<!DOCTYPE html>
@@ -110,15 +110,11 @@ function stage3Html(d: FollowUpData): string {
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="${emailBodyStyle}">
   <p>Hej ${d.firstName},</p>
-  <p>Om du jämför offerter just nu, bra. Det ska du göra. Men alla offerter ser olika ut och det är svårt att jämföra äpplen med äpplen.</p>
-  <p>Här är tre frågor som hjälper dig:</p>
-  <p><strong>1. "Hur djupt gräver ni?"</strong><br>
-  Underarbetet är 40-60% av kostnaden. Det är också det enda du inte kan se efteråt. Seriösa firmor schaktar 25-35 cm med packade lager. Firmor som "sparar" dig pengar här ger dig problem om två vintrar.</p>
-  <p><strong>2. "Vilken garanti ger ni, skriftligt?"</strong><br>
-  Du har 10 års reklamationsrätt enligt konsumenttjänstlagen. Men ett företag som erbjuder skriftlig garanti utöver det litar på sitt arbete.</p>
-  <p><strong>3. "Kan jag se projekt ni gjort i mitt område?"</strong><br>
-  Egna bilder med adress slår stockfoton varje gång. Be om att få kontakta en referens.</p>
-  <p>Vi svarar gärna på alla tre vid ett hembesök. 30 minuter, kostnadsfritt.</p>
+  <p>En sak som ofta skapar förvirring när man jämför offerter: vad ingår egentligen i priset?</p>
+  <p><strong>Din offert täcker allt markarbete.</strong> Schakt, bärlager, sättsand, fogning och arbetskostnad. Det som inte ingår är själva stenmaterialet, alltså marksten, betongplattor eller natursten.</p>
+  <p>Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Att välja sten utan att se och känna på den brukar sluta med att man inte blir nöjd.</p>
+  <p>Vid hembesöket tar vi med materialprover så du kan jämföra på plats. Då får du en komplett offert med allt inkluderat.</p>
+  <p>Det är också värt att tänka på om du jämför med andra offerter: vissa företag inkluderar sten, andra inte. Vissa räknar med tunnare bärlager för att pressa priset. Fråga alltid vad som ingår i grunden och hur djupt de gräver.</p>
   <p style="text-align:center;margin:30px 0;">
     <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
   </p>
@@ -130,20 +126,15 @@ function stage3Html(d: FollowUpData): string {
 function stage3Text(d: FollowUpData): string {
   return `Hej ${d.firstName},
 
-Om du jämför offerter just nu, bra. Det ska du göra. Men alla offerter ser olika ut och det är svårt att jämföra äpplen med äpplen.
+En sak som ofta skapar förvirring när man jämför offerter: vad ingår egentligen i priset?
 
-Här är tre frågor som hjälper dig:
+Din offert täcker allt markarbete. Schakt, bärlager, sättsand, fogning och arbetskostnad. Det som inte ingår är själva stenmaterialet, alltså marksten, betongplattor eller natursten.
 
-1. "Hur djupt gräver ni?"
-Underarbetet är 40-60% av kostnaden. Det är också det enda du inte kan se efteråt. Seriösa firmor schaktar 25-35 cm med packade lager. Firmor som "sparar" dig pengar här ger dig problem om två vintrar.
+Varför separerar vi det? För att stenpriset varierar enormt. En enkel betongsten kostar runt 200-400 kr/kvm. Natursten kan ligga på 800-2 000 kr/kvm. Att välja sten utan att se och känna på den brukar sluta med att man inte blir nöjd.
 
-2. "Vilken garanti ger ni, skriftligt?"
-Du har 10 års reklamationsrätt enligt konsumenttjänstlagen. Men ett företag som erbjuder skriftlig garanti utöver det litar på sitt arbete.
+Vid hembesöket tar vi med materialprover så du kan jämföra på plats. Då får du en komplett offert med allt inkluderat.
 
-3. "Kan jag se projekt ni gjort i mitt område?"
-Egna bilder med adress slår stockfoton varje gång. Be om att få kontakta en referens.
-
-Vi svarar gärna på alla tre vid ett hembesök. 30 minuter, kostnadsfritt.
+Det är också värt att tänka på om du jämför med andra offerter: vissa företag inkluderar sten, andra inte. Vissa räknar med tunnare bärlager för att pressa priset. Fråga alltid vad som ingår i grunden och hur djupt de gräver.
 
 Boka hembesök: ${d.bookingLink}
 
@@ -251,7 +242,7 @@ const STAGE_CONFIG = [
   },
   {
     stage: 3,
-    subject: '3 frågor att ställa varje stenläggare',
+    subject: 'Vad ingår i din offert — och vad ingår inte',
     html: stage3Html,
     hoursAfterLastEmail: 168,
   },
