@@ -104,6 +104,70 @@ const STAGE_CONFIG = [
   },
 ] as const;
 
+// Plain text versions for logging in Airtable Sent Messages
+function stage1Text(d: FollowUpData): string {
+  return `Hej ${d.firstName},
+
+Har du hunnit titta på din offert? Vi vill bara säkerställa att du fått allt du behöver.
+
+Vanliga frågor:
+- Vad ingår i priset? Allt markarbete — schakt, underarbete, stenläggning och fogning.
+- Ingår materialet? Stenmaterial väljs vid hembesöket, så du ser och känner innan du bestämmer dig.
+- Kostar hembesöket? Nej, helt kostnadsfritt och utan förpliktelser.
+
+Boka kostnadsfritt hembesök: ${d.bookingLink}
+
+Med vänliga hälsningar,
+Ramiro Botero
+BKS AB — 073-575 78 97`;
+}
+
+function stage2Text(d: FollowUpData): string {
+  return `Hej ${d.firstName},
+
+Planerar du stenläggning? Här är tre saker som gör stor skillnad för resultatet:
+
+1. Rätt underarbete = hållbarhet i 20+ år
+Schakt och bärlager utgör grunden. Vi använder maskinpackat bärlager i rätt tjocklek beroende på om ytan ska klara gångtrafik eller biltrafik.
+
+2. Val av fog påverkar underhållet
+Ogräshämmande fogsand minskar underhåll dramatiskt. Flexibel hårdfog passar bäst för rörliga underlag.
+
+3. Maskinval sparar tid och pengar
+Större maskin = snabbare arbete = lägre kostnad. Vi anpassar efter tillgängligheten på din fastighet.
+
+Boka hembesök: ${d.bookingLink}
+
+Med vänliga hälsningar,
+Ramiro Botero
+BKS AB — 073-575 78 97`;
+}
+
+function stage3Text(d: FollowUpData): string {
+  return `Hej ${d.firstName},
+
+Din offert är giltig i 23 dagar till. Vi vill gärna hjälpa dig komma igång innan sommarsäsongen.
+
+Hembesöket är:
+- Helt kostnadsfritt
+- Utan förpliktelser
+- 30-45 minuter med exakta mätningar
+- Materialrådgivning på plats
+
+Boka innan offerten går ut: ${d.bookingLink}
+
+Har du redan bestämt dig eller har frågor? Ring oss direkt: 073-575 78 97
+
+Med vänliga hälsningar,
+Ramiro Botero
+BKS AB`;
+}
+
+export function getFollowUpText(stage: 1 | 2 | 3, data: FollowUpData): string {
+  const textFns = { 1: stage1Text, 2: stage2Text, 3: stage3Text };
+  return textFns[stage](data);
+}
+
 export { STAGE_CONFIG };
 
 export async function sendFollowUpEmail(

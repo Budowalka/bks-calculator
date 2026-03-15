@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLeadsNeedingFollowUp, updateLeadEmailStage, updateLeadSentMessages } from '@/lib/airtable';
-import { sendFollowUpEmail, STAGE_CONFIG } from '@/lib/email-sequences';
+import { sendFollowUpEmail, getFollowUpText, STAGE_CONFIG } from '@/lib/email-sequences';
 import { generateCalLink } from '@/lib/cal-link-generator';
 
 /**
@@ -53,10 +53,18 @@ export async function GET(request: NextRequest) {
       if (result.success) {
         // Advance to next stage
         await updateLeadEmailStage(lead.id, config.stage + 1);
+
+        const bodyText = getFollowUpText(
+          config.stage as 1 | 2 | 3,
+          { to: lead.email, firstName: lead.firstName || 'Kund', bookingLink }
+        );
         await updateLeadSentMessages(
           lead.id,
           `Follow-up ${config.stage}: ${STAGE_CONFIG.find(s => s.stage === config.stage)?.subject}`,
-          lead.email
+          lead.email,
+          undefined,
+          false,
+          bodyText
         );
       }
 

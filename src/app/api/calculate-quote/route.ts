@@ -169,12 +169,14 @@ export async function POST(request: NextRequest) {
       console.log('Updating sent messages tracking...');
       if (estimate.lead?.id) {
         const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
+        const quoteBodyText = `Hej ${estimate.lead.first_name},\n\nTack för att du använde vår onlinekalkylator!\n\nDin preliminära totalkostnad: ${new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0 }).format(estimate.total_amount_vat)}\nInkl. moms — Beräknad arbetstid: ${estimate.estimated_work_days} arbetsdagar\n\nEn komplett uppdelning av ditt projekt finns i den bifogade PDF-filen.\n\nMed vänliga hälsningar,\nRamiro Botero\nBKS AB — 073-575 78 97`;
         await updateLeadSentMessages(
           estimate.lead.id,
           emailSubject,
           estimate.lead.email,
           emailResult.messageId,
-          !!pdfBuffer
+          !!pdfBuffer,
+          quoteBodyText
         );
         console.log('Sent messages tracking updated for lead:', estimate.lead.id);
       } else {
@@ -237,12 +239,14 @@ export async function POST(request: NextRequest) {
             console.log('Fallback email (without PDF) sent successfully');
             if (estimate.lead.id) {
               const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
+              const fallbackBodyText = `Hej ${estimate.lead.first_name},\n\nTack för att du använde vår onlinekalkylator!\n\nDin preliminära totalkostnad: ${new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0 }).format(estimate.total_amount_vat)}\nInkl. moms — Beräknad arbetstid: ${estimate.estimated_work_days} arbetsdagar\n\n(PDF-generering misslyckades — ${errorMsg})\n\nMed vänliga hälsningar,\nRamiro Botero\nBKS AB — 073-575 78 97`;
               await updateLeadSentMessages(
                 estimate.lead.id,
                 `${emailSubject} (utan PDF — ${errorMsg})`,
                 estimate.lead.email,
                 fallbackResult.messageId,
-                false
+                false,
+                fallbackBodyText
               );
             }
           } else {
