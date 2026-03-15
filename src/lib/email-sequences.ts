@@ -1,4 +1,14 @@
 // Follow-up email sequences for BKS Calculator leads
+//
+// 5-mailowa sekwencja post-quote. Cel: booking hembesök.
+// Głos: Ramiro jako rzemieślnik, nie sprzedawca. Peer-to-peer.
+// Konkretne liczby, zero guru language, jeden CTA per mail.
+//
+// Stage 1 (T+24h): Reminder + co hembesök daje ponad kalkulator
+// Stage 2 (T+3d):  Social proof — realizacja z Bromma
+// Stage 3 (T+7d):  Edukacja — 3 pytania do każdego stenläggare
+// Stage 4 (T+14d): Underarbete — dlaczego to decyduje o wszystkim
+// Stage 5 (T+21d): Urgency + opt-out
 
 import sgMail from '@sendgrid/mail';
 
@@ -12,166 +22,267 @@ interface FollowUpData {
   bookingLink: string;
 }
 
-// Stage 1: T+24h — reminder
+const emailBodyStyle = 'font-family:Arial,sans-serif;line-height:1.7;color:#333;max-width:600px;margin:0 auto;padding:20px;';
+const ctaStyle = 'display:inline-block;background-color:#28a745;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;font-weight:bold;';
+
+// ─── STAGE 1: T+24h — Reminder + hembesökets värde ───
+
 function stage1Html(d: FollowUpData): string {
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="sv">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+<body style="${emailBodyStyle}">
   <p>Hej ${d.firstName},</p>
-  <p>Har du hunnit titta på din offert? Vi vill bara säkerställa att du fått allt du behöver.</p>
-  <h3>Vanliga frågor:</h3>
-  <ul>
-    <li><strong>Vad ingår i priset?</strong> Allt markarbete — schakt, underarbete, stenläggning och fogning.</li>
-    <li><strong>Ingår materialet?</strong> Stenmaterial väljs vid hembesöket, så du ser och känner innan du bestämmer dig.</li>
-    <li><strong>Kostar hembesöket?</strong> Nej, helt kostnadsfritt och utan förpliktelser.</li>
-  </ul>
+  <p>Igår skickade vi din preliminära offert. Jag vill bara kolla att allt kommit fram.</p>
+  <p>Offerten ger dig en bra bild av kostnaden. Men det finns saker som kalkylatorn inte kan bedöma på distans: markförhållanden, tillgänglighet för maskiner, och inte minst val av sten, som påverkar både pris och slutresultat.</p>
+  <p>Det är därför vi erbjuder ett kostnadsfritt hembesök. Inga förpliktelser, ca 30 minuter. Vi tittar på din tomt, diskuterar dina önskemål och ger dig en bindande offert.</p>
+  <p>Om ni är två som bestämmer hemma, ta gärna med din partner. Det brukar göra det enklare att komma vidare.</p>
   <p style="text-align:center;margin:30px 0;">
-    <a href="${d.bookingLink}" style="display:inline-block;background-color:#28a745;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;font-weight:bold;">Boka kostnadsfritt hembesök</a>
+    <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
   </p>
-  <p>Med vänliga hälsningar,<br><strong>Ramiro Botero</strong><br>BKS AB — 073-575 78 97</p>
+  <p>Eller ring direkt: <strong>073-575 78 97</strong></p>
+  <p>/ Ramiro<br>BKS AB</p>
 </body>
 </html>`;
 }
 
-// Stage 2: T+3d — educational
-function stage2Html(d: FollowUpData): string {
-  return `
-<!DOCTYPE html>
-<html lang="sv">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
-  <p>Hej ${d.firstName},</p>
-  <p>Planerar du stenläggning? Här är tre saker som gör stor skillnad för resultatet:</p>
-  <h3>1. Rätt underarbete = hållbarhet i 20+ år</h3>
-  <p>Schakt och bärlager utgör grunden. Vi använder maskinpackat bärlager i rätt tjocklek beroende på om ytan ska klara gångtrafik eller biltrafik.</p>
-  <h3>2. Val av fog påverkar underhållet</h3>
-  <p>Ogräshämmande fogsand minskar underhåll dramatiskt. Flexibel hårdfog passar bäst för rörliga underlag.</p>
-  <h3>3. Maskinval sparar tid och pengar</h3>
-  <p>Större maskin = snabbare arbete = lägre kostnad. Vi anpassar efter tillgängligheten på din fastighet.</p>
-  <p style="text-align:center;margin:30px 0;">
-    <a href="${d.bookingLink}" style="display:inline-block;background-color:#28a745;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;font-weight:bold;">Boka hembesök — vi berättar mer</a>
-  </p>
-  <p>Med vänliga hälsningar,<br><strong>Ramiro Botero</strong><br>BKS AB — 073-575 78 97</p>
-</body>
-</html>`;
-}
-
-// Stage 3: T+7d — urgency
-function stage3Html(d: FollowUpData): string {
-  return `
-<!DOCTYPE html>
-<html lang="sv">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px;">
-  <p>Hej ${d.firstName},</p>
-  <p>Din offert är giltig i 23 dagar till. Vi vill gärna hjälpa dig komma igång innan sommarsäsongen.</p>
-  <p>Bara en snabb påminnelse — hembesöket är:</p>
-  <ul>
-    <li>✅ Helt kostnadsfritt</li>
-    <li>✅ Utan förpliktelser</li>
-    <li>✅ 30-45 minuter med exakta mätningar</li>
-    <li>✅ Materialrådgivning på plats</li>
-  </ul>
-  <p style="text-align:center;margin:30px 0;">
-    <a href="${d.bookingLink}" style="display:inline-block;background-color:#28a745;color:white;padding:15px 30px;text-decoration:none;border-radius:5px;font-weight:bold;">Boka innan offerten går ut</a>
-  </p>
-  <p>Har du redan bestämt dig eller har frågor? Ring oss direkt: <strong>073-575 78 97</strong></p>
-  <p>Med vänliga hälsningar,<br><strong>Ramiro Botero</strong><br>BKS AB</p>
-</body>
-</html>`;
-}
-
-const STAGE_CONFIG = [
-  {
-    stage: 1,
-    subject: 'Har du hunnit titta på din offert?',
-    html: stage1Html,
-    hoursAfterLastEmail: 24,
-  },
-  {
-    stage: 2,
-    subject: '3 saker att tänka på inför stenläggning',
-    html: stage2Html,
-    hoursAfterLastEmail: 72, // 3 days
-  },
-  {
-    stage: 3,
-    subject: 'Din offert går ut om 23 dagar',
-    html: stage3Html,
-    hoursAfterLastEmail: 168, // 7 days
-  },
-] as const;
-
-// Plain text versions for logging in Airtable Sent Messages
 function stage1Text(d: FollowUpData): string {
   return `Hej ${d.firstName},
 
-Har du hunnit titta på din offert? Vi vill bara säkerställa att du fått allt du behöver.
+Igår skickade vi din preliminära offert. Jag vill bara kolla att allt kommit fram.
 
-Vanliga frågor:
-- Vad ingår i priset? Allt markarbete — schakt, underarbete, stenläggning och fogning.
-- Ingår materialet? Stenmaterial väljs vid hembesöket, så du ser och känner innan du bestämmer dig.
-- Kostar hembesöket? Nej, helt kostnadsfritt och utan förpliktelser.
+Offerten ger dig en bra bild av kostnaden. Men det finns saker som kalkylatorn inte kan bedöma på distans: markförhållanden, tillgänglighet för maskiner, och inte minst val av sten, som påverkar både pris och slutresultat.
 
-Boka kostnadsfritt hembesök: ${d.bookingLink}
+Det är därför vi erbjuder ett kostnadsfritt hembesök. Inga förpliktelser, ca 30 minuter. Vi tittar på din tomt, diskuterar dina önskemål och ger dig en bindande offert.
 
-Med vänliga hälsningar,
-Ramiro Botero
-BKS AB — 073-575 78 97`;
+Om ni är två som bestämmer hemma, ta gärna med din partner. Det brukar göra det enklare att komma vidare.
+
+Boka hembesök: ${d.bookingLink}
+
+Eller ring direkt: 073-575 78 97
+
+/ Ramiro
+BKS AB`;
+}
+
+// ─── STAGE 2: T+3d — Social proof ───
+
+function stage2Html(d: FollowUpData): string {
+  return `<!DOCTYPE html>
+<html lang="sv">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="${emailBodyStyle}">
+  <p>Hej ${d.firstName},</p>
+  <p>En familj i Bromma kontaktade oss förra året. De hade en grusuppfart som blivit ett årligt projekt: ogräs varje sommar, grus som spred sig till gräsmattan, lerigt till hösten.</p>
+  <p>De hade fått tre offerter. Vår var inte billigast. Men vid hembesöket visade vi exakt vad som ingick i varje rad, och vad de andra offerterna inte nämnde: djup på schakt, antal lager bärlager, typ av fog.</p>
+  <p>Arbetet tog 5 dagar. Uppfarten klarade sin första vinter utan att röra sig en millimeter.</p>
+  <p>Vi gör gärna samma sak för dig. Vi börjar med att titta på din tomt och dina förutsättningar. Kostnadsfritt.</p>
+  <p style="text-align:center;margin:30px 0;">
+    <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
+  </p>
+  <p>/ Ramiro<br>BKS AB — 073-575 78 97</p>
+</body>
+</html>`;
 }
 
 function stage2Text(d: FollowUpData): string {
   return `Hej ${d.firstName},
 
-Planerar du stenläggning? Här är tre saker som gör stor skillnad för resultatet:
+En familj i Bromma kontaktade oss förra året. De hade en grusuppfart som blivit ett årligt projekt: ogräs varje sommar, grus som spred sig till gräsmattan, lerigt till hösten.
 
-1. Rätt underarbete = hållbarhet i 20+ år
-Schakt och bärlager utgör grunden. Vi använder maskinpackat bärlager i rätt tjocklek beroende på om ytan ska klara gångtrafik eller biltrafik.
+De hade fått tre offerter. Vår var inte billigast. Men vid hembesöket visade vi exakt vad som ingick i varje rad, och vad de andra offerterna inte nämnde: djup på schakt, antal lager bärlager, typ av fog.
 
-2. Val av fog påverkar underhållet
-Ogräshämmande fogsand minskar underhåll dramatiskt. Flexibel hårdfog passar bäst för rörliga underlag.
+Arbetet tog 5 dagar. Uppfarten klarade sin första vinter utan att röra sig en millimeter.
 
-3. Maskinval sparar tid och pengar
-Större maskin = snabbare arbete = lägre kostnad. Vi anpassar efter tillgängligheten på din fastighet.
+Vi gör gärna samma sak för dig. Vi börjar med att titta på din tomt och dina förutsättningar. Kostnadsfritt.
 
 Boka hembesök: ${d.bookingLink}
 
-Med vänliga hälsningar,
-Ramiro Botero
+/ Ramiro
 BKS AB — 073-575 78 97`;
+}
+
+// ─── STAGE 3: T+7d — 3 frågor att ställa varje stenläggare ───
+
+function stage3Html(d: FollowUpData): string {
+  return `<!DOCTYPE html>
+<html lang="sv">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="${emailBodyStyle}">
+  <p>Hej ${d.firstName},</p>
+  <p>Om du jämför offerter just nu, bra. Det ska du göra. Men alla offerter ser olika ut och det är svårt att jämföra äpplen med äpplen.</p>
+  <p>Här är tre frågor som hjälper dig:</p>
+  <p><strong>1. "Hur djupt gräver ni?"</strong><br>
+  Underarbetet är 40-60% av kostnaden. Det är också det enda du inte kan se efteråt. Seriösa firmor schaktar 25-35 cm med packade lager. Firmor som "sparar" dig pengar här ger dig problem om två vintrar.</p>
+  <p><strong>2. "Vilken garanti ger ni, skriftligt?"</strong><br>
+  Du har 10 års reklamationsrätt enligt konsumenttjänstlagen. Men ett företag som erbjuder skriftlig garanti utöver det litar på sitt arbete.</p>
+  <p><strong>3. "Kan jag se projekt ni gjort i mitt område?"</strong><br>
+  Egna bilder med adress slår stockfoton varje gång. Be om att få kontakta en referens.</p>
+  <p>Vi svarar gärna på alla tre vid ett hembesök. 30 minuter, kostnadsfritt.</p>
+  <p style="text-align:center;margin:30px 0;">
+    <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
+  </p>
+  <p>/ Ramiro<br>BKS AB — 073-575 78 97</p>
+</body>
+</html>`;
 }
 
 function stage3Text(d: FollowUpData): string {
   return `Hej ${d.firstName},
 
-Din offert är giltig i 23 dagar till. Vi vill gärna hjälpa dig komma igång innan sommarsäsongen.
+Om du jämför offerter just nu, bra. Det ska du göra. Men alla offerter ser olika ut och det är svårt att jämföra äpplen med äpplen.
 
-Hembesöket är:
-- Helt kostnadsfritt
-- Utan förpliktelser
-- 30-45 minuter med exakta mätningar
-- Materialrådgivning på plats
+Här är tre frågor som hjälper dig:
 
-Boka innan offerten går ut: ${d.bookingLink}
+1. "Hur djupt gräver ni?"
+Underarbetet är 40-60% av kostnaden. Det är också det enda du inte kan se efteråt. Seriösa firmor schaktar 25-35 cm med packade lager. Firmor som "sparar" dig pengar här ger dig problem om två vintrar.
 
-Har du redan bestämt dig eller har frågor? Ring oss direkt: 073-575 78 97
+2. "Vilken garanti ger ni, skriftligt?"
+Du har 10 års reklamationsrätt enligt konsumenttjänstlagen. Men ett företag som erbjuder skriftlig garanti utöver det litar på sitt arbete.
 
-Med vänliga hälsningar,
-Ramiro Botero
+3. "Kan jag se projekt ni gjort i mitt område?"
+Egna bilder med adress slår stockfoton varje gång. Be om att få kontakta en referens.
+
+Vi svarar gärna på alla tre vid ett hembesök. 30 minuter, kostnadsfritt.
+
+Boka hembesök: ${d.bookingLink}
+
+/ Ramiro
+BKS AB — 073-575 78 97`;
+}
+
+// ─── STAGE 4: T+14d — Underarbete avgör allt ───
+
+function stage4Html(d: FollowUpData): string {
+  return `<!DOCTYPE html>
+<html lang="sv">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="${emailBodyStyle}">
+  <p>Hej ${d.firstName},</p>
+  <p>Det vanligaste jag hör från husägare som anlitat någon annan:</p>
+  <p><em>"Det såg perfekt ut. Sen kom vintern."</em></p>
+  <p>Stockholm har tjäle ner till en och en halv meter. Marken fryser, expanderar, trycker uppåt. Om bärlagret inte är tillräckligt djupt eller inte packats i rätt ordning, rör sig allt ovanpå. Stenar glider isär. Fogar spricker. Vatten samlas.</p>
+  <p>Det knepiga? Dag ett ser resultatet identiskt ut, oavsett vad som ligger under. Du märker skillnaden först efter andra vintern. Och då kostar det mer att åtgärda än att göra rätt från början.</p>
+  <p>Vid hembesöket visar vi exakt vad ditt projekt kräver och varför. Inga överraskningar.</p>
+  <p style="text-align:center;margin:30px 0;">
+    <a href="${d.bookingLink}" style="${ctaStyle}">Boka kostnadsfritt hembesök</a>
+  </p>
+  <p>Frågor? Ring: <strong>073-575 78 97</strong></p>
+  <p>/ Ramiro<br>BKS AB</p>
+</body>
+</html>`;
+}
+
+function stage4Text(d: FollowUpData): string {
+  return `Hej ${d.firstName},
+
+Det vanligaste jag hör från husägare som anlitat någon annan:
+
+"Det såg perfekt ut. Sen kom vintern."
+
+Stockholm har tjäle ner till en och en halv meter. Marken fryser, expanderar, trycker uppåt. Om bärlagret inte är tillräckligt djupt eller inte packats i rätt ordning, rör sig allt ovanpå. Stenar glider isär. Fogar spricker. Vatten samlas.
+
+Det knepiga? Dag ett ser resultatet identiskt ut, oavsett vad som ligger under. Du märker skillnaden först efter andra vintern. Och då kostar det mer att åtgärda än att göra rätt från början.
+
+Vid hembesöket visar vi exakt vad ditt projekt kräver och varför. Inga överraskningar.
+
+Boka kostnadsfritt hembesök: ${d.bookingLink}
+
+Frågor? Ring: 073-575 78 97
+
+/ Ramiro
 BKS AB`;
 }
 
-export function getFollowUpText(stage: 1 | 2 | 3, data: FollowUpData): string {
-  const textFns = { 1: stage1Text, 2: stage2Text, 3: stage3Text };
+// ─── STAGE 5: T+21d — Urgency + opt-out ───
+
+function stage5Html(d: FollowUpData): string {
+  return `<!DOCTYPE html>
+<html lang="sv">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="${emailBodyStyle}">
+  <p>Hej ${d.firstName},</p>
+  <p>Din preliminära offert går ut om 9 dagar.</p>
+  <p>Jag vet att stenläggning är ett stort beslut. Men om du siktar på vår eller sommar vill jag vara ärlig: våra tider fylls snabbt efter påsk. Det gäller hela branschen i Stockholm.</p>
+  <p>Ett hembesök tar 30 minuter och innebär inget åtagande. Du får en bindande offert, ser materialprover och får en tidsplan.</p>
+  <p>Har planerna ändrats? Helt okej. Svara på detta mail så tar vi bort dig från vår lista.</p>
+  <p style="text-align:center;margin:30px 0;">
+    <a href="${d.bookingLink}" style="${ctaStyle}">Boka hembesök</a>
+  </p>
+  <p>Eller ring: <strong>073-575 78 97</strong></p>
+  <p>/ Ramiro<br>BKS AB</p>
+</body>
+</html>`;
+}
+
+function stage5Text(d: FollowUpData): string {
+  return `Hej ${d.firstName},
+
+Din preliminära offert går ut om 9 dagar.
+
+Jag vet att stenläggning är ett stort beslut. Men om du siktar på vår eller sommar vill jag vara ärlig: våra tider fylls snabbt efter påsk. Det gäller hela branschen i Stockholm.
+
+Ett hembesök tar 30 minuter och innebär inget åtagande. Du får en bindande offert, ser materialprover och får en tidsplan.
+
+Har planerna ändrats? Helt okej. Svara på detta mail så tar vi bort dig från vår lista.
+
+Boka hembesök: ${d.bookingLink}
+
+Eller ring: 073-575 78 97
+
+/ Ramiro
+BKS AB`;
+}
+
+// ─── CONFIG ───
+
+const STAGE_CONFIG = [
+  {
+    stage: 1,
+    subject: 'Har du fått din offert?',
+    html: stage1Html,
+    hoursAfterLastEmail: 24,
+  },
+  {
+    stage: 2,
+    subject: 'Familjen i Bromma som hade en grusplan i 10 år',
+    html: stage2Html,
+    hoursAfterLastEmail: 72,
+  },
+  {
+    stage: 3,
+    subject: '3 frågor att ställa varje stenläggare',
+    html: stage3Html,
+    hoursAfterLastEmail: 168,
+  },
+  {
+    stage: 4,
+    subject: 'Varför en del stenläggningar spricker efter 2 vintrar',
+    html: stage4Html,
+    hoursAfterLastEmail: 336,
+  },
+  {
+    stage: 5,
+    subject: 'Din offert gäller i 9 dagar till',
+    html: stage5Html,
+    hoursAfterLastEmail: 504,
+  },
+] as const;
+
+type StageNumber = 1 | 2 | 3 | 4 | 5;
+
+const textFns: Record<StageNumber, (d: FollowUpData) => string> = {
+  1: stage1Text, 2: stage2Text, 3: stage3Text, 4: stage4Text, 5: stage5Text,
+};
+
+export function getFollowUpText(stage: StageNumber, data: FollowUpData): string {
   return textFns[stage](data);
 }
 
 export { STAGE_CONFIG };
 
 export async function sendFollowUpEmail(
-  stage: 1 | 2 | 3,
+  stage: StageNumber,
   data: FollowUpData
 ): Promise<{ success: boolean; error?: string }> {
   const config = STAGE_CONFIG.find(s => s.stage === stage);

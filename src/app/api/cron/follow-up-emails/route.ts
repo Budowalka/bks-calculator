@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       });
 
       const result = await sendFollowUpEmail(
-        config.stage as 1 | 2 | 3,
+        config.stage as 1 | 2 | 3 | 4 | 5,
         {
           to: lead.email,
           firstName: lead.firstName || 'Kund',
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         await updateLeadEmailStage(lead.id, config.stage + 1);
 
         const bodyText = getFollowUpText(
-          config.stage as 1 | 2 | 3,
+          config.stage as 1 | 2 | 3 | 4 | 5,
           { to: lead.email, firstName: lead.firstName || 'Kund', bookingLink }
         );
         await updateLeadSentMessages(
