@@ -41,140 +41,132 @@ interface EmailData {
  * Creates the HTML email template for quote emails
  */
 function createEmailTemplate(data: EmailData): string {
-  return `
-<!DOCTYPE html>
+  const formattedAmount = new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0 }).format(data.totalAmount);
+
+  return `<!DOCTYPE html>
 <html lang="sv">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Din preliminära offert från BKS AB</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        .logo {
-            max-width: 150px;
-            margin-bottom: 10px;
-        }
-        .quote-summary {
-            background-color: #e8f5e8;
-            border: 2px solid #28a745;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .quote-amount {
-            font-size: 24px;
-            font-weight: bold;
-            color: #155724;
-            margin: 10px 0;
-        }
-        .disclaimer-box {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        .disclaimer-title {
-            color: #856404;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .cta-button {
-            display: inline-block;
-            background-color: #28a745;
-            color: white !important;
-            padding: 15px 30px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 16px;
-            margin: 20px 0;
-        }
-        .contact-info {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
-        ul {
-            padding-left: 20px;
-        }
-        li {
-            margin-bottom: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="header">
-        <h1>Din preliminära offert för stenläggning</h1>
-        <p>Offert #${data.estimateNumber}</p>
-    </div>
+<body style="margin:0;padding:0;background-color:#F5F2ED;font-family:Georgia,Times,serif;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Din preliminära offert: ${formattedAmount} inkl. moms. Detaljerad PDF bifogad.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F2ED;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#FFFFFF;border-radius:4px;overflow:hidden;max-width:600px;">
 
-    <p>Hej ${data.customerName},</p>
+          <!-- Gold top bar -->
+          <tr><td style="height:4px;background-color:#C8A55C;font-size:0;line-height:0;">&nbsp;</td></tr>
 
-    <p>Tack för att du använde vår onlinekalkylator! Vi har skapat en preliminär offert baserat på dina val och önskemål.</p>
+          <!-- Logo + Offert nr -->
+          <tr>
+            <td style="padding:28px 40px 0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td><img src="https://www.smova.se/images/logo-bks.png" alt="BKS AB" width="80" style="display:block;border:0;" /></td>
+                  <td align="right" style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:13px;color:#8A8579;vertical-align:bottom;">Offert #${data.estimateNumber}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <div class="quote-summary">
-        <h3>Din preliminära totalkostnad:</h3>
-        <div class="quote-amount">${new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0 }).format(data.totalAmount)}</div>
-        <p><small>Inkl. moms • Beräknad arbetstid: ${data.workDays} arbetsdagar</small></p>
-    </div>
+          <!-- Body -->
+          <tr>
+            <td style="padding:24px 40px 0 40px;">
+              <p style="margin:0 0 18px 0;font-family:Georgia,Times,serif;font-size:17px;line-height:1.7;color:#1E1D1B;">Hej ${data.customerName},</p>
+              <p style="margin:0 0 18px 0;font-family:Georgia,Times,serif;font-size:17px;line-height:1.7;color:#1E1D1B;">Tack för att du använde vår kalkylator. Här är din preliminära offert för stenläggning.</p>
+            </td>
+          </tr>
 
-    <div class="disclaimer-box">
-        <div class="disclaimer-title">⚠️ Viktigt att veta - Ingår INTE i priset:</div>
-        <ul>
-            <li><strong>Betongplattor och marksten</strong></li>
-            <li><strong>Små- och storgatsten</strong></li>
-            <li><strong>Granithällar och skifferplattor</strong></li>
-        </ul>
-        <p><small><strong>Obs:</strong> Om du valde asfalt som slutbeläggning ingår detta i priset. Övriga stenläggnings-material väljs och prissätts vid vårt kostnadsfria hembesök.</small></p>
-    </div>
+          <!-- Quote amount box -->
+          <tr>
+            <td style="padding:8px 40px 18px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF8F5;border:1px solid #E8E4DD;border-radius:6px;">
+                <tr>
+                  <td align="center" style="padding:24px 20px;">
+                    <p style="margin:0 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:13px;color:#8A8579;text-transform:uppercase;letter-spacing:1px;">Preliminär totalkostnad</p>
+                    <p style="margin:0 0 8px 0;font-family:Georgia,Times,serif;font-size:32px;font-weight:bold;color:#1E1D1B;">${formattedAmount}</p>
+                    <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:13px;color:#8A8579;">Inkl. moms &middot; Beräknad arbetstid: ${data.workDays} arbetsdagar</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <h3>📋 Detaljerad offert bifogad</h3>
-    <p>En komplett uppdelning av ditt projekt med alla kostnader finns i den bifogade PDF-filen. Där ser du exakt vad som ingår i varje del av arbetet.</p>
+          <!-- Disclaimer -->
+          <tr>
+            <td style="padding:0 40px 18px 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#FDF8EE;border-left:3px solid #C8A55C;border-radius:0 4px 4px 0;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0 0 8px 0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;color:#1E1D1B;">Ingår inte i priset:</p>
+                    <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#5A5549;">Stenmaterial (marksten, betongplattor, natursten). Väljs vid hembesök. Om du valde asfalt ingår det i priset.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <div style="text-align: center; margin: 30px 0;">
-        <h3>🏠 Nästa steg: Kostnadsfri platsbesiktning</h3>
-        <p>För en bindande offert och för att diskutera materialval behöver vi göra en platsbesiktning. Detta är helt kostnadsfritt och utan förpliktelser.</p>
-        <a href="${data.calLink}" class="cta-button">Boka din platsbesiktning nu</a>
-    </div>
+          <!-- PDF info -->
+          <tr>
+            <td style="padding:0 40px 18px 40px;">
+              <p style="margin:0;font-family:Georgia,Times,serif;font-size:17px;line-height:1.7;color:#1E1D1B;">En komplett uppdelning av ditt projekt finns i den bifogade PDF-filen.</p>
+            </td>
+          </tr>
 
-    <h3>Vad händer nu?</h3>
-    <ul>
-        <li>Vi kontaktar dig inom 24 timmar för att bekräfta din bokning</li>
-        <li>Hembesöket är kostnadsfritt och utan förpliktelser</li>
-        <li>Vid hembesöket får du en bindande offert med exakta priser</li>
-        <li>Vi hjälper dig välja rätt material för ditt projekt</li>
-    </ul>
+          <!-- Next steps -->
+          <tr>
+            <td style="padding:0 40px 0 40px;">
+              <p style="margin:0 0 12px 0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#1E1D1B;">Nästa steg</p>
+              <p style="margin:0 0 24px 0;font-family:Georgia,Times,serif;font-size:17px;line-height:1.7;color:#1E1D1B;">Boka ett kostnadsfritt hembesök så tittar vi på din tomt, ger dig rådgivning kring materialval och skickar en komplett offert.</p>
+            </td>
+          </tr>
 
-    <div class="contact-info">
-        <h4>Har du frågor?</h4>
-        <p><strong>Kontakta oss gärna:</strong><br>
-        📞 073 575 78 97<br>
-        ✉️ info@bksakeri.se<br>
-        🌐 www.bksakeri.se</p>
-        
-        <p style="margin-top: 20px;">
-        <strong>Med vänliga hälsningar,<br>
-        Ramiro Botero<br>
-        Projektledare, BKS AB</strong>
-        </p>
-    </div>
+          <!-- CTA -->
+          <tr>
+            <td align="center" style="padding:0 40px 12px 40px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background-color:#C8A55C;border-radius:6px;">
+                    <a href="${data.calLink}" style="display:inline-block;padding:16px 36px;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#1E1D1B;text-decoration:none;letter-spacing:0.3px;">Boka kostnadsfritt hembesök</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 40px 28px 40px;">
+              <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:14px;color:#8A8579;">
+                Eller ring direkt: <a href="tel:+46735757897" style="color:#1E1D1B;font-weight:600;text-decoration:none;">073-575 78 97</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:0 40px;"><div style="height:1px;background-color:#E8E4DD;"></div></td></tr>
+
+          <!-- Signature -->
+          <tr>
+            <td style="padding:24px 40px;">
+              <p style="margin:0 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1E1D1B;font-weight:600;">Ramiro Botero</p>
+              <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#8A8579;">BKS AB &middot; <a href="tel:+46735757897" style="color:#8A8579;text-decoration:none;">073-575 78 97</a></p>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;">
+          <tr>
+            <td align="center" style="padding:20px 40px;">
+              <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#A09A91;">BKS AB &middot; Kungsgatan 29, 111 56 Stockholm &middot; Org.nr 559179-6700</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }
