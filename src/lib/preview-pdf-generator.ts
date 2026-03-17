@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { EstimateData, EstimateItem } from './pdf-generator';
-import { generateCalLinkFromLead } from './cal-link-generator';
+import { generateShortBookingUrl } from './cal-link-generator';
 
 /**
  * Generate HTML content for preview PDF from estimate data
@@ -64,13 +64,10 @@ function generatePreviewHTMLContent(estimate: EstimateData): string {
   const clientPhone = estimate.lead?.phone || 'Telefon';
   const clientEmail = estimate.lead?.email || 'E-post';
 
-  // Generate Cal.com booking link
-  const calLink = estimate.lead ? generateCalLinkFromLead({
-    'Lead First Name': estimate.lead.first_name,
-    'Lead Last Name': estimate.lead.last_name,
-    'Lead Email': estimate.lead.email,
-    'Lead Phone Number': estimate.lead.phone
-  }) : 'https://cal.com/bksentreprenad/platsbesok';
+  // Generate booking link — use short URL if estimate ID available
+  const calLink = estimate.id
+    ? generateShortBookingUrl(estimate.id)
+    : 'https://cal.com/bksentreprenad/platsbesok';
 
   // Generate estimate table HTML
   const estimateTableHTML = categoryTotals.map(({ category, items, total }) => `

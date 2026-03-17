@@ -57,6 +57,15 @@ export function generateCalLink(data: CalLinkData): string {
  * @param leadData Lead data from Airtable
  * @returns Formatted Cal.com URL
  */
+/**
+ * Generates a short booking URL using the app's URL shortener
+ */
+export function generateShortBookingUrl(id: string, type: 'estimate' | 'lead' = 'estimate'): string {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://smova.se';
+  const prefix = type === 'lead' ? 'l' : 'b';
+  return `${baseUrl}/${prefix}/${id}`;
+}
+
 export function generateCalLinkFromLead(leadData: {
   'Lead First Name'?: string;
   'Lead Last Name'?: string;

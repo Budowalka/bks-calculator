@@ -672,6 +672,31 @@ export async function getLeadsNeedingFollowUp(
   }
 }
 
+/**
+ * Fetch lead data for URL shortener redirect (/l/[leadId])
+ */
+export async function getLeadForRedirect(leadId: string): Promise<{
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+} | null> {
+  try {
+    const record = await base(TABLES.LEAD_DATA).find(leadId);
+    return {
+      id: record.id,
+      firstName: (record.get('Lead First Name') as string) || '',
+      lastName: (record.get('Lead Last Name') as string) || '',
+      email: (record.get('Lead Email') as string) || '',
+      phone: (record.get('Lead Phone Number') as string) || '',
+    };
+  } catch (error) {
+    console.error('[getLeadForRedirect] Error fetching lead:', error);
+    return null;
+  }
+}
+
 export async function updateLeadSentMessages(
   leadId: string,
   emailSubject: string,

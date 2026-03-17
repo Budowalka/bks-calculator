@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import { generateCalLinkFromLead } from './cal-link-generator';
+import { generateCalLinkFromLead, generateShortBookingUrl } from './cal-link-generator';
 
 // Initialize SendGrid with API key
 if (process.env.SENDGRID_API_KEY) {
@@ -223,7 +223,8 @@ Projektledare, BKS AB
 export async function sendQuoteEmail(
   estimateData: EstimateData,
   pdfBuffer?: Buffer,
-  pdfFilename?: string
+  pdfFilename?: string,
+  estimateId?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     if (!process.env.SENDGRID_API_KEY) {
@@ -238,13 +239,15 @@ export async function sendQuoteEmail(
       throw new Error('No recipient email address found in estimate data');
     }
 
-    // Generate Cal.com booking link
-    const calLink = generateCalLinkFromLead({
-      'Lead First Name': estimateData.lead['Lead First Name'] || estimateData.lead.first_name,
-      'Lead Last Name': estimateData.lead['Lead Last Name'] || estimateData.lead.last_name,
-      'Lead Email': estimateData.lead['Lead Email'] || estimateData.lead.email,
-      'Lead Phone Number': estimateData.lead['Lead Phone Number'] || estimateData.lead.phone
-    });
+    // Generate booking link — use short URL if estimateId available
+    const calLink = estimateId
+      ? generateShortBookingUrl(estimateId)
+      : generateCalLinkFromLead({
+          'Lead First Name': estimateData.lead['Lead First Name'] || estimateData.lead.first_name,
+          'Lead Last Name': estimateData.lead['Lead Last Name'] || estimateData.lead.last_name,
+          'Lead Email': estimateData.lead['Lead Email'] || estimateData.lead.email,
+          'Lead Phone Number': estimateData.lead['Lead Phone Number'] || estimateData.lead.phone
+        });
 
     // Prepare email data
     const emailData: EmailData = {

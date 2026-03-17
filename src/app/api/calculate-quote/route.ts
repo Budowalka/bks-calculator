@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       
       // Send email with PDF attachment
       console.log('Sending quote email to:', estimate.lead.email);
-      const emailResult = await sendQuoteEmail(emailEstimateData, pdfBuffer, filename);
+      const emailResult = await sendQuoteEmail(emailEstimateData, pdfBuffer, filename, estimateId);
       
       if (!emailResult.success) {
         throw new Error(`Failed to send quote email: ${emailResult.error}`);
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
               'Lead Phone Number': estimate.lead.phone
             }
           };
-          const fallbackResult = await sendQuoteEmail(emailEstimateData, undefined, undefined);
+          const fallbackResult = await sendQuoteEmail(emailEstimateData, undefined, undefined, estimateId);
           if (fallbackResult.success) {
             console.log('Fallback email (without PDF) sent successfully');
             if (estimate.lead.id) {
