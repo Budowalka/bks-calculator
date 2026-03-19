@@ -1,22 +1,32 @@
 {
   "functions": {
     "src/app/api/generate-preview-pdf/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 3009
     },
     "src/app/api/send-quote-email/route.ts": {
       "maxDuration": 30
     },
     "src/app/api/calculate-quote/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 3009
     },
     "src/app/api/cron/follow-up-emails/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/cron/retry-failed-pdfs/route.ts": {
+      "maxDuration": 60,
+      "memory": 3009
     }
   },
   "crons": [
     {
       "path": "/api/cron/follow-up-emails",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/retry-failed-pdfs",
+      "schedule": "30 * * * *"
     }
   ],
   "regions": ["iad1"],

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BKSCalculator } from '@/lib/calculator';
-import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimate, updateLeadSentMessages, setLeadLastEmailSent } from '@/lib/airtable';
+import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimateWithRetry, updateLeadSentMessages, setLeadLastEmailSent, appendEstimateNote } from '@/lib/airtable';
 import { FormData, CustomerInfo, QuoteResponse } from '@/lib/types';
 import { Attribution } from '@/lib/attribution';
-import { generatePreviewPDF, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
+import { generatePreviewPDFWithRetry, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
 import { sendQuoteEmail, validateEmailConfig } from '@/lib/email-service';
 import { sendQuoteConfirmationSMS } from '@/lib/sms';
 
@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
     // even if PDF generation or email sending fails below
     await setLeadLastEmailSent(leadId);
 
+    // Delay for Airtable linked records propagation (Estimate_Items -> Estimate)
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     // Synchronous PDF and Email Generation - Complete before responding to user
     console.log('Starting synchronous PDF and email generation for estimate:', estimateId);
     
@@ -126,15 +129,15 @@ export async function POST(request: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
-      // Generate PDF
-      const pdfBuffer = await generatePreviewPDF(estimate);
+      // Generate PDF (with retry for cold start resilience)
+      const pdfBuffer = await generatePreviewPDFWithRetry(estimate, 2);
       const filename = generatePreviewPDFFilename(estimate);
       
       console.log('Preview PDF generated successfully, size:', pdfBuffer.length);
       
-      // Upload PDF to Airtable
+      // Upload PDF to Airtable (with retry)
       console.log('Uploading PDF to Airtable...');
-      await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+      await uploadPDFToAirtableEstimateWithRetry(estimateId, pdfBuffer, filename);
       console.log('Preview PDF uploaded to Airtable successfully');
       
       // Prepare estimate data for email service
@@ -214,50 +217,9 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       });
 
-      // Fallback: try sending email WITHOUT PDF attachment
-      try {
-        console.log('Attempting fallback: sending email without PDF...');
-        const estimate = await getEstimateForPDF(estimateId);
-        if (estimate?.lead?.email) {
-          const emailEstimateData = {
-            estimate_nr: estimate.estimate_nr,
-            total_amount_vat: estimate.total_amount_vat,
-            estimated_work_days: estimate.estimated_work_days,
-            lead: {
-              first_name: estimate.lead.first_name,
-              last_name: estimate.lead.last_name,
-              email: estimate.lead.email,
-              phone: estimate.lead.phone,
-              'Lead First Name': estimate.lead.first_name,
-              'Lead Last Name': estimate.lead.last_name,
-              'Lead Email': estimate.lead.email,
-              'Lead Phone Number': estimate.lead.phone
-            }
-          };
-          const fallbackResult = await sendQuoteEmail(emailEstimateData, undefined, undefined, estimateId);
-          if (fallbackResult.success) {
-            console.log('Fallback email (without PDF) sent successfully');
-            if (estimate.lead.id) {
-              const emailSubject = `Din preliminära offert för stenläggning - Offert #${estimate.estimate_nr}`;
-              const fallbackBodyText = `Hej ${estimate.lead.first_name},\n\nTack för att du använde vår onlinekalkylator!\n\nDin preliminära totalkostnad: ${new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', minimumFractionDigits: 0 }).format(estimate.total_amount_vat)}\nInkl. moms — Beräknad arbetstid: ${estimate.estimated_work_days} arbetsdagar\n\n(PDF-generering misslyckades — ${errorMsg})\n\nMed vänliga hälsningar,\nRamiro Botero\nBKS AB — 073-575 78 97`;
-              await updateLeadSentMessages(
-                estimate.lead.id,
-                `${emailSubject} (utan PDF — ${errorMsg})`,
-                estimate.lead.email,
-                fallbackResult.messageId,
-                false,
-                fallbackBodyText
-              );
-            }
-          } else {
-            console.error('Fallback email also failed:', fallbackResult.error);
-          }
-        }
-      } catch (fallbackError) {
-        console.error('Fallback email attempt failed:', fallbackError);
-      }
-
-      console.error('PDF/Email processing failed, but continuing with quote response');
+      // Log error to Airtable Notes field — cron job will retry PDF + email later
+      await appendEstimateNote(estimateId, `PDF/email failed: ${errorMsg}`);
+      console.error('PDF/Email processing failed. Cron retry-failed-pdfs will handle this estimate.');
     }
 
     // Prepare response

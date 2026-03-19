@@ -571,8 +571,86 @@ export async function uploadPDFToAirtableEstimate(
 }
 
 /**
- * Update the Sent Messages field in Lead_Data table
+ * Retry wrapper for uploadPDFToAirtableEstimate
  */
+export async function uploadPDFToAirtableEstimateWithRetry(
+  estimateId: string,
+  pdfBuffer: Buffer,
+  filename: string,
+  maxRetries: number = 2
+): Promise<void> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await uploadPDFToAirtableEstimate(estimateId, pdfBuffer, filename);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`Airtable upload attempt ${attempt} failed:`, lastError.message);
+
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+
+  throw lastError || new Error('Airtable upload failed after all retries');
+}
+
+/**
+ * Append a note with timestamp to the Notes field on an Estimate record
+ */
+export async function appendEstimateNote(
+  estimateId: string,
+  note: string
+): Promise<void> {
+  try {
+    const record = await base(TABLES.ESTIMATES).find(estimateId);
+    const existingNotes = (record.get('Notes') as string) || '';
+    const timestamp = new Date().toISOString();
+    await base(TABLES.ESTIMATES).update(estimateId, {
+      'Notes': existingNotes
+        ? `${existingNotes}\n\n[${timestamp}] ${note}`
+        : `[${timestamp}] ${note}`
+    });
+  } catch (error) {
+    console.error('Failed to append estimate note:', error);
+  }
+}
+
+/**
+ * Find Estimates without PDF attachment (status=Automat, created in last 7 days)
+ */
+export async function getEstimatesWithoutPDF(): Promise<Array<{
+  id: string;
+  estimateNr: number;
+  leadIds: string[];
+}>> {
+  try {
+    const records = await base(TABLES.ESTIMATES)
+      .select({
+        filterByFormula: `AND(
+          {Status} = 'Automat',
+          {pdf_created_date} = '',
+          DATETIME_DIFF(NOW(), {Created}, 'days') <= 7
+        )`,
+        fields: ['Status', 'Lead', 'Estimate Nr', 'Created', 'Notes'],
+        maxRecords: 20
+      })
+      .all();
+
+    return records.map(record => ({
+      id: record.id,
+      estimateNr: (record.get('Estimate Nr') as number) || 0,
+      leadIds: (record.get('Lead') as string[]) || [],
+    }));
+  } catch (error) {
+    console.error('Error fetching estimates without PDF:', error);
+    return [];
+  }
+}
+
 /**
  * Update the Booking Status field on a Lead_Data record
  */

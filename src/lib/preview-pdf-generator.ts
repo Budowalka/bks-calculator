@@ -588,6 +588,41 @@ export async function generatePreviewPDF(estimate: EstimateData): Promise<Buffer
 }
 
 /**
+ * Retry wrapper for generatePreviewPDF — retries on failure with increasing delay
+ */
+export async function generatePreviewPDFWithRetry(
+  estimate: EstimateData,
+  maxRetries: number = 2
+): Promise<Buffer> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`PDF generation attempt ${attempt}/${maxRetries}`);
+      const buffer = await generatePreviewPDF(estimate);
+
+      if (!buffer || buffer.length === 0) {
+        throw new Error('PDF generation returned empty buffer');
+      }
+
+      console.log(`PDF generated on attempt ${attempt}, size: ${buffer.length} bytes`);
+      return buffer;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`PDF generation attempt ${attempt} failed:`, lastError.message);
+
+      if (attempt < maxRetries) {
+        const delay = attempt * 2000;
+        console.log(`Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('PDF generation failed after all retries');
+}
+
+/**
  * Generate filename for the preview PDF
  */
 export function generatePreviewPDFFilename(estimate: EstimateData): string {
