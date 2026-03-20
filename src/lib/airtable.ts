@@ -775,6 +775,41 @@ export async function getLeadForRedirect(leadId: string): Promise<{
   }
 }
 
+/**
+ * Find a lead by email address (newest first)
+ */
+export async function findLeadByEmail(email: string): Promise<string | null> {
+  try {
+    const records = await base(TABLES.LEAD_DATA)
+      .select({
+        filterByFormula: `{Lead Email} = '${email.replace(/'/g, "\\'")}'`,
+        fields: ['Lead Email'],
+        sort: [{ field: 'Created', direction: 'desc' }],
+        maxRecords: 1,
+      })
+      .all();
+
+    return records.length > 0 ? records[0].id : null;
+  } catch (error) {
+    console.error('Error finding lead by email:', error);
+    return null;
+  }
+}
+
+/**
+ * Update the Lead Status field on a Lead_Data record
+ */
+export async function updateLeadStatus(leadId: string, status: string): Promise<void> {
+  try {
+    await base(TABLES.LEAD_DATA).update(leadId, {
+      'Lead Status': status,
+    });
+    console.log(`Lead status updated to "${status}" for lead:`, leadId);
+  } catch (error) {
+    console.error('Error updating lead status:', error);
+  }
+}
+
 export async function updateLeadSentMessages(
   leadId: string,
   emailSubject: string,
