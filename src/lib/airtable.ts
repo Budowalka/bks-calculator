@@ -685,8 +685,9 @@ export async function updateLeadEmailStage(
 }
 
 /**
- * Set Last Email Sent on a lead record (used immediately after lead creation
- * so follow-up cron can pick up the lead even if the initial email fails)
+ * Set Last Email Sent on a lead record. Called only after a real email
+ * is dispatched (initial offer, retry, or follow-up), so follow-up cron
+ * never runs before the offer actually lands in the inbox.
  */
 export async function setLeadLastEmailSent(leadId: string): Promise<void> {
   try {
@@ -696,6 +697,84 @@ export async function setLeadLastEmailSent(leadId: string): Promise<void> {
     console.log('Last Email Sent set for lead:', leadId);
   } catch (error) {
     console.error('Error setting Last Email Sent:', error);
+  }
+}
+
+/**
+ * Upserts a lead by email. If a lead with this email exists within the last
+ * `windowDays` AND is not already booked (Stage != 99), updates that record
+ * in place instead of creating a duplicate. Otherwise creates a new lead.
+ *
+ * Rationale: users often re-submit the form to compare variants (different
+ * material, size, etc.). We want them to receive a fresh quote each time —
+ * but with one Airtable record, one nurture sequence, and no duplicate mail.
+ *
+ * - Form and personal fields are overwritten with the latest submission.
+ * - Email Sequence Stage resets to 1 (new quote deserves fresh nurture).
+ * - Last Email Sent is cleared so the follow-up cron doesn't fire from an
+ *   old timestamp — it gets set again by updateLeadSentMessages after the
+ *   new offer actually ships.
+ * - Lead Status and Booking Status are NOT touched (manual progression).
+ * - Sent Messages is NOT touched (preserves history).
+ * - Booked leads (Stage 99) are treated as a new inquiry → new lead.
+ */
+export async function upsertLeadByEmail(
+  formData: FormData,
+  customerInfo: CustomerInfo,
+  attribution?: Attribution,
+  windowDays = 30
+): Promise<{ id: string; isUpdate: boolean }> {
+  try {
+    const escapedEmail = customerInfo.email.toLowerCase().replace(/"/g, '\\"');
+    const existing = await base(TABLES.LEAD_DATA)
+      .select({
+        filterByFormula: `AND(
+          LOWER({Lead Email}) = "${escapedEmail}",
+          DATETIME_DIFF(NOW(), CREATED_TIME(), 'days') <= ${windowDays},
+          OR({Email Sequence Stage} != 99, {Email Sequence Stage} = BLANK())
+        )`,
+        maxRecords: 1,
+        sort: [{ field: 'Last Email Sent', direction: 'desc' }],
+        fields: ['Lead Email', 'Email Sequence Stage'],
+      })
+      .firstPage();
+
+    if (existing.length === 0) {
+      const id = await createLead(formData, customerInfo, attribution);
+      return { id, isUpdate: false };
+    }
+
+    const leadRecord = existing[0];
+    const updateFields: Record<string, unknown> = {
+      'Lead First Name': customerInfo.first_name,
+      'Lead Last Name': customerInfo.last_name,
+      'Lead Phone Number': customerInfo.phone,
+      'Full Address': customerInfo.address,
+      'materialval': formData.materialval,
+      'area': formData.area,
+      'forberedelse': formData.forberedelse,
+      'anvandning': formData.anvandning,
+      'fog': formData.fog,
+      'kantsten_need': formData.kantsten_need,
+      'kantsten-langd': formData.kantsten_langd || null,
+      'materialval-kantsten': formData.materialval_kantsten || null,
+      'maskin-plats': formData.plats_maskin || null,
+      'plats-kranbil': formData.plats_kranbil,
+      'Email Sequence Stage': 1,
+      'Last Email Sent': null,
+    };
+    if (attribution?.gclid) updateFields['gclid'] = attribution.gclid;
+    if (attribution?.utm_source) updateFields['utm_source'] = attribution.utm_source;
+    if (attribution?.utm_medium) updateFields['utm_medium'] = attribution.utm_medium;
+    if (attribution?.utm_campaign) updateFields['utm_campaign'] = attribution.utm_campaign;
+    if (attribution?.utm_term) updateFields['utm_term'] = attribution.utm_term;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await base(TABLES.LEAD_DATA).update(leadRecord.id, updateFields as any);
+    return { id: leadRecord.id, isUpdate: true };
+  } catch (error) {
+    console.error('Error in upsertLeadByEmail:', error);
+    throw new Error('Failed to upsert lead record');
   }
 }
 

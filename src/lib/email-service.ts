@@ -294,7 +294,7 @@ export async function sendQuoteEmail(
     }
 
     // Prepare sender info
-    const senderName = process.env.SENDGRID_SENDER_NAME?.replace(/\+/g, ' ') || 'Ramiro Botero';
+    const senderName = process.env.SENDGRID_SENDER_NAME?.replace(/\+/g, ' ').trim() || 'Ramiro Botero';
     
     // Prepare email message
     const msg = {

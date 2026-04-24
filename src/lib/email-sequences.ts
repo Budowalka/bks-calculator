@@ -339,7 +339,7 @@ export async function sendFollowUpEmail(
 
   try {
     const senderName =
-      process.env.SENDGRID_SENDER_NAME?.replace(/\+/g, ' ') ||
+      process.env.SENDGRID_SENDER_NAME?.replace(/\+/g, ' ').trim() ||
       'Ramiro Botero';
 
     await sgMail.send({

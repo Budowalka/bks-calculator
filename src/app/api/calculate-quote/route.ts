@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BKSCalculator } from '@/lib/calculator';
-import { createLead, createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimateWithRetry, updateLeadSentMessages, setLeadLastEmailSent, appendEstimateNote } from '@/lib/airtable';
+import { createEstimate, createEstimateItems, getPricingComponents, getEstimateForPDF, uploadPDFToAirtableEstimateWithRetry, updateLeadSentMessages, appendEstimateNote, upsertLeadByEmail } from '@/lib/airtable';
 import { FormData, CustomerInfo, QuoteResponse } from '@/lib/types';
 import { Attribution } from '@/lib/attribution';
 import { generatePreviewPDFWithRetry, generatePreviewPDFFilename } from '@/lib/preview-pdf-generator';
@@ -55,17 +55,20 @@ export async function POST(request: NextRequest) {
     const startPricing = Date.now();
     const pricingComponents = await getPricingComponents();
     console.log(`✓ Pricing components fetched in ${Date.now() - startPricing}ms`);
-    
+
     // Initialize calculator and generate quote
     const startCalc = Date.now();
     const calculator = new BKSCalculator(pricingComponents);
     const quote = calculator.calculateQuote(formData);
     console.log(`✓ Quote calculated in ${Date.now() - startCalc}ms`);
 
-    // Create lead record in Airtable
+    // Upsert lead: reuse existing record if this email submitted within
+    // the last 30 days (and wasn't already booked). Avoids duplicate lead
+    // records and duplicate parallel nurture sequences when users
+    // re-submit the form to test different variants.
     const startLead = Date.now();
-    const leadId = await createLead(formData, customerInfo, attribution);
-    console.log(`✓ Lead created in ${Date.now() - startLead}ms (ID: ${leadId})`);
+    const { id: leadId, isUpdate } = await upsertLeadByEmail(formData, customerInfo, attribution);
+    console.log(`✓ Lead ${isUpdate ? 'updated' : 'created'} in ${Date.now() - startLead}ms (ID: ${leadId})`);
     
     // Create estimate record in Airtable
     const startEstimate = Date.now();
@@ -79,10 +82,6 @@ export async function POST(request: NextRequest) {
     
     const totalAirtableTime = Date.now() - startPricing;
     console.log(`=== Total Airtable Operations: ${totalAirtableTime}ms ===`);
-
-    // Set Last Email Sent immediately so follow-up cron can pick up this lead
-    // even if PDF generation or email sending fails below
-    await setLeadLastEmailSent(leadId);
 
     // Delay for Airtable linked records propagation (Estimate_Items -> Estimate)
     await new Promise(resolve => setTimeout(resolve, 500));
