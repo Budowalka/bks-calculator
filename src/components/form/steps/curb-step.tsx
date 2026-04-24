@@ -23,16 +23,21 @@ export function CurbStep() {
 
   const handleNeedSelect = (kantsten_need: FormData['kantsten_need']) => {
     updateFormData({ kantsten_need });
-    
+
     if (kantsten_need === 'Nej') {
       // Clear conditional fields and mark complete
-      updateFormData({ 
-        kantsten_langd: undefined, 
-        materialval_kantsten: undefined 
+      updateFormData({
+        kantsten_langd: undefined,
+        materialval_kantsten: undefined
       });
       markStepCompleted(6);
       setShowSubSteps(false);
     } else {
+      // Seed default length so formData matches the slider's initial UI value
+      // (otherwise kantsten_langd stays undefined if user doesn't touch slider)
+      if (formData.kantsten_langd === undefined) {
+        updateFormData({ kantsten_langd: 10 });
+      }
       setShowSubSteps(true);
     }
   };
